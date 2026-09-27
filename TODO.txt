@@ -1,0 +1,27 @@
+Tetris game rules:
+
+1. Board
+10 collumns wide 20 rows tall
+
+2. Shapes
+I piece 4 blocks long (light blue)
+O piece 2x2 (yellow)
+T piece 3 blocks with 1 sticking out (purple)
+S piece 2x2 but offset to the right (green)
+Z piece 2x2 but offset to the left (red)
+L piece L shape (orange)
+J piece L shape pointing left (dark blue)
+
+3. Movement
+Players can:
+move falling pieces left or right
+rotate them 90 degrees clockwise or counterclockwise
+speed up their descent or instantly drop to the bottom
+
+4. Scoring
+Fill every square in a horizontal row without any gaps to clear the line
+Clearing four lines at the same time awards the highest points
+Levels: As you clear more lines, the game level increases, causing the pieces to fall faster
+
+5. Losing
+The game ends when new pieces can no longer enter the playfield because the existing stack has reached the top of the screen
