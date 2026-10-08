@@ -1,10 +1,14 @@
-package main;
+package game;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 public class KeyHandler implements KeyListener {
-    public static boolean upPressed, downPressed, leftPressed, rightPressed, pausePressed;
+    public static boolean upPressed;
+    public static boolean downPressed;
+    public static boolean leftPressed;
+    public static boolean rightPressed;
+    public static boolean pausePressed;
 
 
 

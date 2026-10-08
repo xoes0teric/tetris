@@ -1,17 +1,18 @@
-package mino;
+package tetromino;
 
-import main.KeyHandler;
-import main.PlayManager;
-
+import game.KeyHandler;
+import game.PlayManager;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
 public class Mino {
-    public Block b[] = new Block[4];
-    public Block tempB[] = new Block[4];
+    public Block[] b = new Block[4];
+    public Block[] tempB = new Block[4];
     int autoDropCounter = 0;
     public int direction = 1; // There are for directions (1/2/3/4)
-    boolean leftCollision, rightCollision, bottomCollision;
+    boolean leftCollision;
+    boolean rightCollision;
+    boolean bottomCollision;
     public boolean active = true;
     public boolean deactivating;
     int deactivateCounter = 0;
@@ -27,7 +28,9 @@ public class Mino {
         tempB[2] = new Block(c);
         tempB[3] = new Block(c);
     }
+
     public void setXY(int x, int y) {}
+
     public void updateXY(int direction) {
         checkRotationCollision();
 
@@ -43,10 +46,15 @@ public class Mino {
             b[3].y = tempB[3].y;
         }
     }
+
     public void getDirection1() {}
+
     public void getDirection2() {}
+
     public void getDirection3() {}
+
     public void getDirection4() {}
+
     public void checkMovementCollision() {
         leftCollision = false;
         rightCollision = false;
@@ -75,6 +83,7 @@ public class Mino {
             }
         }
     }
+
     public void checkRotationCollision() {
         leftCollision = false;
         rightCollision = false;
@@ -141,10 +150,20 @@ public class Mino {
         // move the mino
         if (KeyHandler.upPressed) {
             switch (direction) {
-                case 1: getDirection2(); break;
-                case 2: getDirection3(); break;
-                case 3: getDirection4(); break;
-                case 4: getDirection1(); break;
+                case 1:
+                    getDirection2();
+                    break;
+                case 2:
+                    getDirection3();
+                    break;
+                case 3:
+                    getDirection4();
+                    break;
+                case 4:
+                    getDirection1();
+                    break;
+                default:
+                    break;
             }
             KeyHandler.upPressed = false;
         }
@@ -216,10 +235,10 @@ public class Mino {
     public void draw(Graphics2D g2) {
         int margin = 2;
         g2.setColor(b[0].c);
-        g2.fillRect(b[0].x, b[0].y, Block.SIZE-(margin*2), Block.SIZE-(margin*2));
-        g2.fillRect(b[1].x, b[1].y, Block.SIZE-(margin*2), Block.SIZE-(margin*2));
-        g2.fillRect(b[2].x, b[2].y, Block.SIZE-(margin*2), Block.SIZE-(margin*2));
-        g2.fillRect(b[3].x, b[3].y, Block.SIZE-(margin*2), Block.SIZE-(margin*2));
+        g2.fillRect(b[0].x, b[0].y, Block.SIZE - (margin * 2), Block.SIZE - (margin * 2));
+        g2.fillRect(b[1].x, b[1].y, Block.SIZE - (margin * 2), Block.SIZE - (margin * 2));
+        g2.fillRect(b[3].x, b[3].y, Block.SIZE - (margin * 2), Block.SIZE - (margin * 2));
+        g2.fillRect(b[2].x, b[2].y, Block.SIZE - (margin * 2), Block.SIZE - (margin * 2));
     }
 
 }

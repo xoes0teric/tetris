@@ -1,9 +1,12 @@
-package mino;
+package tetromino;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 
 public class Block extends Rectangle {
-    public int x, y;
+    public int x;
+    public int y;
     public static final int SIZE = 30;
     public Color c;
 
@@ -14,6 +17,6 @@ public class Block extends Rectangle {
     public void draw(Graphics2D g2) {
         int margin = 2;
         g2.setColor(c);
-        g2.fillRect(x, y, SIZE-(margin*2), SIZE-(margin*2));
+        g2.fillRect(x, y, SIZE - (margin * 2), SIZE - (margin * 2));
     }
 }

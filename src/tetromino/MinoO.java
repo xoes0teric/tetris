@@ -1,9 +1,9 @@
-package mino;
+package tetromino;
 
-import java.awt.*;
+import java.awt.Color;
 
-public class Mino_Square extends Mino {
-    public Mino_Square() {
+public class MinoO extends Mino {
+    public MinoO() {
         create(Color.yellow);
     }
 
@@ -23,7 +23,10 @@ public class Mino_Square extends Mino {
     }
 
     public void getDirection1() {}
+
     public void getDirection2() {}
+
     public void getDirection3() {}
+
     public void getDirection4() {}
 }

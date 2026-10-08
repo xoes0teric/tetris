@@ -1,9 +1,9 @@
-package mino;
+package tetromino;
 
 import java.awt.Color;
 
-public class Mino_T extends Mino{
-    public Mino_T() {
+public class MinoT extends Mino {
+    public MinoT() {
         create(Color.magenta);
     }
 
@@ -53,6 +53,7 @@ public class Mino_T extends Mino{
 
         updateXY(2);
     }
+
     public void getDirection3() {
         //
         //  o o o
@@ -68,6 +69,7 @@ public class Mino_T extends Mino{
 
         updateXY(3);
     }
+
     public void getDirection4() {
         //    o
         //  o o

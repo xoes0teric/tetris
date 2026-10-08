@@ -1,12 +1,15 @@
-package main;
+package game;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import javax.swing.JPanel;
-import java.awt.*;
 
 public class GamePanel extends JPanel implements Runnable {
     public static final int WIDTH = 1280;
     public static final int HEIGHT = 720;
-    final int FPS = 60;
+    static final int FPS = 60;
     Thread gameThread;
     PlayManager pm;
 
@@ -30,7 +33,7 @@ public class GamePanel extends JPanel implements Runnable {
     @Override
     public void run() {
         // Game Loop
-        double drawInterval = (double) 1000000000/FPS;
+        double drawInterval = (double) 1000000000 / FPS;
         double delta = 0;
         long lastTime = System.nanoTime();
         long currentTime;
