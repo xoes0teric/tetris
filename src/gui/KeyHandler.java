@@ -1,4 +1,4 @@
-package game;
+package gui;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -9,7 +9,6 @@ public class KeyHandler implements KeyListener {
     public static boolean leftPressed;
     public static boolean rightPressed;
     public static boolean pausePressed;
-
 
 
     @Override

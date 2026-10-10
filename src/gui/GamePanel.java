@@ -1,5 +1,6 @@
-package game;
+package gui;
 
+import game.PlayManager;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -7,22 +8,25 @@ import java.awt.Graphics2D;
 import javax.swing.JPanel;
 
 public class GamePanel extends JPanel implements Runnable {
+    // Window size, in pixels
     public static final int WIDTH = 1280;
     public static final int HEIGHT = 720;
     static final int FPS = 60;
     Thread gameThread;
     PlayManager pm;
+    Renderer renderer;
 
     public GamePanel() {
         // Panel Settings
         this.setPreferredSize(new Dimension(WIDTH, HEIGHT));
         this.setBackground(Color.BLACK);
         this.setLayout(null);
-        // Implements KeyListener
+
         this.addKeyListener(new KeyHandler());
         this.setFocusable(true);
 
         pm = new PlayManager();
+        renderer = new Renderer();
     }
 
     public void launchGame() {
@@ -52,7 +56,24 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     private void update() {
-        if (!KeyHandler.pausePressed && !pm.gameOver) {
+        if (!KeyHandler.pausePressed && !pm.isGameOver()) {
+            // Pass the pressed keys to the game
+            if (KeyHandler.upPressed) {
+                pm.rotate();
+                KeyHandler.upPressed = false;
+            }
+            if (KeyHandler.downPressed) {
+                pm.moveDown();
+                KeyHandler.downPressed = false;
+            }
+            if (KeyHandler.leftPressed) {
+                pm.moveLeft();
+                KeyHandler.leftPressed = false;
+            }
+            if (KeyHandler.rightPressed) {
+                pm.moveRight();
+                KeyHandler.rightPressed = false;
+            }
             pm.update();
         }
     }
@@ -61,6 +82,6 @@ public class GamePanel extends JPanel implements Runnable {
         super.paintComponent(g);
 
         Graphics2D g2 = (Graphics2D) g;
-        pm.draw(g2);
+        renderer.draw(g2, pm, KeyHandler.pausePressed);
     }
 }

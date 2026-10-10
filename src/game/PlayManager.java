@@ -1,283 +1,183 @@
 package game;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
-import tetromino.Block;
-import tetromino.Mino;
-import tetromino.MinoI;
-import tetromino.MinoJ;
-import tetromino.MinoL;
-import tetromino.MinoO;
-import tetromino.MinoS;
-import tetromino.MinoT;
-import tetromino.MinoZ;
+import tetromino.Shape;
+import tetromino.Tetromino;
 
+// Everything is in cells, drawing is done by gui.Renderer
 public class PlayManager {
-    // Main Play Area
-    static final int WIDTH = 360;
-    static final int HEIGHT = 600;
-    public static int left_x;
-    public static int right_x;
-    public static int top_y;
-    public static int bottom_y;
+    private static final int LOCK_DELAY = 45; // frames a landed piece waits before locking
+    // Where the first block of a new piece appears, in cells
+    private static final int SPAWN_COL = 4;
+    private static final int SPAWN_ROW = 1;
 
-    // Mino
-    Mino currentMino;
-    final int minoStartX;
-    final int minoStartY;
-    Mino nextMino;
-    final int nextMinoX;
-    final int nextMinoY;
-    public static ArrayList<Block> staticBlocks = new ArrayList<>();
+    private final Board board = new Board();
 
+    private Tetromino currentPiece;
+    private Tetromino nextPiece;
+    private boolean active = true; // false once the current piece is ready to lock
+    private int autoDropCounter = 0;
+    private int deactivateCounter = 0;
+    private boolean deactivating = false;
 
-    // Others
-    public static int dropInterval = 60; // Mino drops in every 60 frames
-    boolean gameOver;
-
-    // Effect
-    boolean effectCounterOn;
-    int effectCounter;
-    ArrayList<Integer> effectY = new ArrayList<>();
+    private int dropInterval = 60; // the piece drops one row every 60 frames
+    private boolean gameOver;
+    // Rows cleared for GUI effects
+    private final List<Integer> clearedRows = new ArrayList<>();
 
     // Score
-    int level = 1;
-    int lines;
-    int score;
-
+    private int level = 1;
+    private int lines;
+    private int score;
 
     public PlayManager() {
-
-        // Main Play Area Frame
-        left_x = (GamePanel.WIDTH / 2) - (WIDTH / 2); // 1280/2 - 360/2 = 460
-        right_x = left_x + WIDTH;
-        top_y = 50;
-        bottom_y = top_y + HEIGHT;
-
-        minoStartX = left_x + (WIDTH / 2) - Block.SIZE;
-        minoStartY = top_y + Block.SIZE;
-
-        nextMinoX = right_x + 175;
-        nextMinoY = top_y + 500;
-
-        // Set the starting Mino
-        currentMino = pickMino();
-        currentMino.setXY(minoStartX, minoStartY);
-        nextMino = pickMino();
-        nextMino.setXY(nextMinoX, nextMinoY);
+        // Set the starting piece
+        currentPiece = pickPiece();
+        currentPiece.place(SPAWN_COL, SPAWN_ROW);
+        nextPiece = pickPiece();
     }
 
-    private Mino pickMino() {
-        Mino mino = null;
-        int i = new Random().nextInt(7);
+    private Tetromino pickPiece() {
+        Shape[] shapes = Shape.values();
+        return new Tetromino(shapes[new Random().nextInt(shapes.length)], board);
+    }
 
-        switch (i) {
-            case 0:
-                mino = new MinoL();
-                break;
-            case 1:
-                mino = new MinoJ();
-                break;
-            case 2:
-                mino = new MinoO();
-                break;
-            case 3:
-                mino = new MinoI();
-                break;
-            case 4:
-                mino = new MinoT();
-                break;
-            case 5:
-                mino = new MinoZ();
-                break;
-            case 6:
-                mino = new MinoS();
-                break;
-            default:
-                break;
+    public void rotate() {
+        if (active) {
+            currentPiece.rotate();
         }
-        return mino;
+    }
+
+    public void moveLeft() {
+        if (active) {
+            currentPiece.tryMove(-1, 0);
+        }
+    }
+
+    public void moveRight() {
+        if (active) {
+            currentPiece.tryMove(1, 0);
+        }
+    }
+
+    public void moveDown() {
+        // When moved down, reset the autoDropCounter
+        if (active && currentPiece.tryMove(0, 1)) {
+            autoDropCounter = 0;
+        }
     }
 
     public void update() {
-        // Check if currentMino is active
-        if (!currentMino.active) {
-            // if the mino is not active, put it into the staticBlocks
-            staticBlocks.add(currentMino.b[0]);
-            staticBlocks.add(currentMino.b[1]);
-            staticBlocks.add(currentMino.b[2]);
-            staticBlocks.add(currentMino.b[3]);
+        if (!active) {
+            lockPiece();
+            return;
+        }
 
-            // check if the game is over
-            if (currentMino.b[0].x == minoStartX && currentMino.b[0].y == minoStartY) {
-                // this means the currentMino immediately collided a block and couldn't move at all
-                // so it's xy are the same with the nextMino's
-                gameOver = true;
-            }
+        if (deactivating) {
+            deactivating();
+        }
 
-            currentMino.deactivating = false;
-
-            // replace the currentMino with the nextMino
-            currentMino = nextMino;
-            currentMino.setXY(minoStartX, minoStartY);
-            nextMino = pickMino();
-            nextMino.setXY(nextMinoX, nextMinoY);
-
-            // when a mino becomes inactive, check if lines(s) can be deleted
-            checkDelete();
+        if (!currentPiece.canMoveDown()) {
+            deactivating = true;
         } else {
-            currentMino.update();
+            ++autoDropCounter; // the counter increases in every frame
+            if (autoDropCounter == dropInterval) {
+                currentPiece.tryMove(0, 1);
+                autoDropCounter = 0;
+            }
         }
     }
 
-    private void checkDelete() {
-        int x = left_x;
-        int y = top_y;
-        int blockCount = 0;
-        int lineCount = 0;
-
-
-        while (x < right_x && y < bottom_y) {
-
-            for (int i = 0; i < staticBlocks.size(); ++i) {
-                if (staticBlocks.get(i).x == x && staticBlocks.get(i).y == y) {
-                    // increase count if there is a static block
-                    ++blockCount;
-                }
+    private void deactivating() {
+        ++deactivateCounter;
+        // Wait LOCK_DELAY frames until deactivate
+        if (deactivateCounter == LOCK_DELAY) {
+            deactivateCounter = 0;
+            // if the bottom is still hitting after the delay, lock the piece
+            if (!currentPiece.canMoveDown()) {
+                active = false;
             }
+        }
+    }
 
-            x += Block.SIZE;
+    private void lockPiece() {
+        board.lock(currentPiece);
 
-            if (x == right_x) {
+        // if the first block is still on the spawn cell, the piece couldn't move at all,
+        // so the stack has reached the top (game over)
+        int[] first = currentPiece.getBlocks()[0];
+        if (first[0] == SPAWN_COL && first[1] == SPAWN_ROW) {
+            gameOver = true;
+        }
 
-                // if block count hits 12, that means the current y line is all filled with blocks
-                // so we can delete them
-                if (blockCount == 12) {
+        // replace the currentPiece with the nextPiece
+        currentPiece = nextPiece;
+        currentPiece.place(SPAWN_COL, SPAWN_ROW);
+        nextPiece = pickPiece();
+        active = true;
+        autoDropCounter = 0;
+        deactivateCounter = 0;
+        deactivating = false;
 
-                    effectCounterOn = true;
-                    effectY.add(y);
-
-                    for (int i = staticBlocks.size() - 1; i > -1; --i) {
-                        // remove all the blocks in the current y line
-                        if (staticBlocks.get(i).y == y) {
-                            staticBlocks.remove(i);
-                        }
-                    }
-
-                    ++lineCount;
-                    ++lines;
-                    // Drop Speed
-                    // if the line score hits a certain number, increase the drop speed
-                    // 1 is the fastest
-                    if (lines % 10 == 0 && dropInterval > 1) {
-                        ++level;
-                        if (dropInterval > 10) {
-                            dropInterval -= 10;
-                        } else {
-                            dropInterval -= 1;
-                        }
-                    }
-
-                    // a line has been deleted so need to slide down blocks that are above it
-                    for (int i = 0; i < staticBlocks.size(); ++i) {
-                        // if block is above the current y, move it down by the block size
-                        if (staticBlocks.get(i).y < y) {
-                            staticBlocks.get(i).y += Block.SIZE;
-                        }
-                    }
+        // when a piece locks, check if line(s) can be deleted
+        List<Integer> cleared = board.clearFullRows();
+        clearedRows.addAll(cleared);
+        for (int i = 0; i < cleared.size(); ++i) {
+            ++lines;
+            // Drop Speed
+            // if the line score hits a certain number, increase the drop speed
+            // 1 is the fastest
+            if (lines % 10 == 0 && dropInterval > 1) {
+                ++level;
+                if (dropInterval > 10) {
+                    dropInterval -= 10;
+                } else {
+                    dropInterval -= 1;
                 }
-
-                blockCount = 0;
-                x = left_x;
-                y += Block.SIZE;
             }
         }
 
         // Add Score
-        if (lineCount > 0) {
+        if (!cleared.isEmpty()) {
             int singleLineScore = 10 * level;
-            score += singleLineScore * lineCount;
-
+            score += singleLineScore * cleared.size();
         }
     }
 
-    public void draw(Graphics2D g2) {
-        // Draw Play Area
-        g2.setColor(Color.white);
-        g2.setStroke(new BasicStroke(4f));
-        g2.drawRect(left_x - 4, top_y - 4, WIDTH + 8, HEIGHT + 8);
+    // Returns the rows cleared since the last call and forgets them
+    public List<Integer> takeClearedRows() {
+        List<Integer> rows = new ArrayList<>(clearedRows);
+        clearedRows.clear();
+        return rows;
+    }
 
-        // Draw Mino Frame
-        int x = right_x + 100;
-        int y = bottom_y - 200;
-        g2.drawRect(x, y, 200, 200);
-        g2.setFont(new Font("Arial", Font.PLAIN, 30));
-        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-                RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        g2.drawString("NEXT", x + 60, y + 60);
+    public Board getBoard() {
+        return board;
+    }
 
-        // Draw Score Frame
-        g2.drawRect(x, top_y, 250, 300);
-        x += 40;
-        y = top_y + 90;
-        g2.drawString("LEVEL: " + level, x, y);
-        y += 70;
-        g2.drawString("LINES: " + lines, x, y);
-        y += 70;
-        g2.drawString("SCORE: " + score, x, y);
+    public Tetromino getCurrentPiece() {
+        return currentPiece;
+    }
 
-        // Draw the currentMino
-        if (currentMino != null) {
-            currentMino.draw(g2);
-        }
+    public Tetromino getNextPiece() {
+        return nextPiece;
+    }
 
-        // Draw the nextMino
-        nextMino.draw(g2);
+    public boolean isGameOver() {
+        return gameOver;
+    }
 
-        // Draw staticBlocks
-        for (int i = 0; i < staticBlocks.size(); ++i) {
-            staticBlocks.get(i).draw(g2);
-        }
+    public int getLevel() {
+        return level;
+    }
 
-        // Draw Effect
-        if (effectCounterOn) {
-            ++effectCounter;
+    public int getLines() {
+        return lines;
+    }
 
-            g2.setColor(Color.red);
-            for (int i = 0; i < effectY.size(); ++i) {
-                g2.fillRect(left_x, effectY.get(i), WIDTH, Block.SIZE);
-            }
-
-            if (effectCounter == 10) {
-                effectCounterOn = false;
-                effectCounter = 0;
-                effectY.clear();
-            }
-        }
-
-        // Draw Pause or Game Over
-        g2.setColor(Color.yellow);
-        g2.setFont(g2.getFont().deriveFont(50f));
-        if (gameOver) {
-            x = left_x + 25;
-            y = top_y + 320;
-            g2.drawString("GAME OVER", x, y);
-        } else if (KeyHandler.pausePressed) {
-            x = left_x + 70;
-            y = top_y + 320;
-            g2.drawString("PAUSED", x, y);
-        }
-
-        // Draw the Game Title
-        x = 35;
-        y = top_y + 320;
-        g2.setColor(Color.white);
-        g2.setFont(new Font("Times New Roman", Font.ITALIC, 60));
-        g2.drawString("++Tetris", x + 20, y);
+    public int getScore() {
+        return score;
     }
 }
