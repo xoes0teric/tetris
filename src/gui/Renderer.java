@@ -58,8 +58,15 @@ public class Renderer {
         y += 70;
         g2.drawString("SCORE: " + pm.getScore(), x, y);
 
-        // Draw the currentPiece on the board
+        // Draw the ghost piece (where the piece lands after a hard drop)
         Tetromino current = pm.getCurrentPiece();
+        int dropDistance = current.getDropDistance();
+        for (int[] block : current.getBlocks()) {
+            drawGhostBlock(g2, current.getShape().getColor(),
+                    cellX(block[0]), cellY(block[1] + dropDistance));
+        }
+
+        // Draw the currentPiece on the board
         for (int[] block : current.getBlocks()) {
             drawBlock(g2, current.getShape().getColor(), cellX(block[0]), cellY(block[1]));
         }
@@ -139,5 +146,13 @@ public class Renderer {
     private void drawBlock(Graphics2D g2, Color color, int x, int y) {
         g2.setColor(color);
         g2.fillRect(x, y, BLOCK_SIZE - (BLOCK_MARGIN * 2), BLOCK_SIZE - (BLOCK_MARGIN * 2));
+    }
+
+    // Same size as drawBlock, but only the outline
+    private void drawGhostBlock(Graphics2D g2, Color color, int x, int y) {
+        g2.setColor(color);
+        g2.setStroke(new BasicStroke(2f));
+        g2.drawRect(x + 1, y + 1, BLOCK_SIZE - (BLOCK_MARGIN * 2) - 2,
+                BLOCK_SIZE - (BLOCK_MARGIN * 2) - 2);
     }
 }

@@ -69,6 +69,16 @@ public class PlayManager {
         }
     }
 
+    public void hardDrop() {
+        if (active) {
+            while (currentPiece.tryMove(0, 1)) {
+            }
+            active = false;
+        }
+    }
+
+    // TODO: Add Hold mechanic
+
     public void update() {
         if (!active) {
             lockPiece();

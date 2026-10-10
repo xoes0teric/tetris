@@ -60,6 +60,15 @@ public class Tetromino {
         return fits(cells, col, row + 1);
     }
 
+    // How many rows the piece can fall before it lands (used for the ghost piece)
+    public int getDropDistance() {
+        int distance = 0;
+        while (fits(cells, col, row + distance + 1)) {
+            ++distance;
+        }
+        return distance;
+    }
+
     // Moves the piece by (dx, dy) cells if there is room
     public boolean tryMove(int dx, int dy) {
         return tryPlace(cells, col + dx, row + dy);

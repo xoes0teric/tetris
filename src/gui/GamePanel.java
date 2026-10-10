@@ -52,10 +52,21 @@ public class GamePanel extends JPanel implements Runnable {
                 repaint();
                 delta--;
             }
+
+            // Wait a moment instead of checking the time nonstop
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                return;
+            }
         }
     }
 
     private void update() {
+        if (KeyHandler.resetPressed) {
+            resetGame();
+        }
+
         if (!KeyHandler.pausePressed && !pm.isGameOver()) {
             // Pass the pressed keys to the game
             if (KeyHandler.upPressed) {
@@ -74,8 +85,24 @@ public class GamePanel extends JPanel implements Runnable {
                 pm.moveRight();
                 KeyHandler.rightPressed = false;
             }
+            if (KeyHandler.spacePressed) {
+                pm.hardDrop();
+                KeyHandler.spacePressed = false;
+            }
             pm.update();
         }
+    }
+
+    private void resetGame() {
+        pm = new PlayManager();
+        renderer = new Renderer();
+        KeyHandler.resetPressed = false;
+        KeyHandler.pausePressed = false;
+        KeyHandler.upPressed = false;
+        KeyHandler.downPressed = false;
+        KeyHandler.leftPressed = false;
+        KeyHandler.rightPressed = false;
+        KeyHandler.spacePressed = false;
     }
 
     public void paintComponent(Graphics g) {
