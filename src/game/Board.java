@@ -5,12 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 import tetromino.Tetromino;
 
-// The board is a 10x20 grid of cells
+/**
+    The board is a 10x20 grid of cells
+    Each cell contains a color if it's occupied and null if it's free
+*/
 public class Board {
     public static final int COLUMNS = 10;
     public static final int ROWS = 20;
 
-    // Each cell contains a color if it's occupied and null if it's free
     private final Color[][] cells = new Color[ROWS][COLUMNS];
 
     public Color getColor(int col, int row) {
