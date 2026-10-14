@@ -27,7 +27,8 @@ public class ScoreTracker {
         return score;
     }
 
-    public void countClearedLines(List<Integer> cleared) {
+    // Returns the points earned for the cleared lines
+    public int countClearedLines(List<Integer> cleared) {
         for (int i = 0; i < cleared.size(); ++i) {
             ++linesCleared;
             if (linesCleared % 10 == 0) {
@@ -35,9 +36,17 @@ public class ScoreTracker {
                 timer.speedUp();
             }
         }
+        int earned = 0;
         if (!cleared.isEmpty()) {
             int singleLineScore = 10 * level;
-            score += singleLineScore * cleared.size();
+            earned = singleLineScore * cleared.size();
+            score += earned;
         }
+        return earned;
+    }
+
+    // Points that don't come from line clears (like the hammer)
+    public void addPoints(int points) {
+        score += points;
     }
 }

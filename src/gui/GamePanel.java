@@ -1,5 +1,6 @@
 package gui;
 
+import game.GameState;
 import game.PlayManager;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -15,6 +16,7 @@ public class GamePanel extends JPanel implements Runnable {
     Thread gameThread;
     PlayManager pm;
     Renderer renderer;
+    private long lastUpdateTime;
 
     public GamePanel() {
         // Panel Settings
@@ -30,6 +32,7 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void launchGame() {
+        lastUpdateTime = System.nanoTime();
         gameThread = new Thread(this);
         gameThread.start();
     }
@@ -63,46 +66,141 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     private void update() {
+        // Real time since the last update, the boss timer uses it.
+        // Paused frames are skipped so the pause doesn't count
+        long now = System.nanoTime();
+        long elapsed = now - lastUpdateTime;
+        lastUpdateTime = now;
+
         if (KeyHandler.resetPressed) {
             resetGame();
         }
 
-        if (!KeyHandler.pausePressed && !pm.isGameOver()) {
-            // Pass the pressed keys to the game
-            if (KeyHandler.upPressed) {
-                pm.rotate();
-                KeyHandler.upPressed = false;
-            }
-            if (KeyHandler.downPressed) {
-                pm.moveDown();
-                KeyHandler.downPressed = false;
-            }
-            if (KeyHandler.leftPressed) {
-                pm.moveLeft();
-                KeyHandler.leftPressed = false;
-            }
-            if (KeyHandler.rightPressed) {
-                pm.moveRight();
-                KeyHandler.rightPressed = false;
-            }
-            if (KeyHandler.spacePressed) {
-                pm.hardDrop();
-                KeyHandler.spacePressed = false;
-            }
-            pm.update();
+        if (KeyHandler.pausePressed || pm.isGameOver()) {
+            // keys pressed now must not do anything after unpausing
+            KeyHandler.clearActions();
+            return;
         }
+
+        // Pass the pressed keys to the game, each screen only reads its own keys
+        GameState stateBefore = pm.getGameState();
+        switch (stateBefore) {
+            case PLAY -> handlePlayKeys();
+            case SELECT_UPGRADE -> handleUpgradeKeys();
+            case AIM_HAMMER, AIM_PATCH -> handleTargetKeys();
+            case BOSS_INTRO, BOSS_RESULT -> handleBossScreenKeys();
+            default -> { }
+        }
+        pm.update(elapsed);
+
+        // keys from one screen must not carry over to the next one
+        if (pm.getGameState() != stateBefore) {
+            KeyHandler.clearActions();
+        }
+    }
+
+    private void handlePlayKeys() {
+        if (KeyHandler.upPressed) {
+            pm.rotate();
+            KeyHandler.upPressed = false;
+        }
+        if (KeyHandler.downPressed) {
+            pm.moveDown();
+            KeyHandler.downPressed = false;
+        }
+        if (KeyHandler.leftPressed) {
+            pm.moveLeft();
+            KeyHandler.leftPressed = false;
+        }
+        if (KeyHandler.rightPressed) {
+            pm.moveRight();
+            KeyHandler.rightPressed = false;
+        }
+        if (KeyHandler.spacePressed) {
+            pm.hardDrop();
+            KeyHandler.spacePressed = false;
+        }
+        if (KeyHandler.holdSlotPressed >= 0) {
+            pm.hold(KeyHandler.holdSlotPressed);
+            KeyHandler.holdSlotPressed = -1;
+        }
+        if (KeyHandler.flushPressed) {
+            pm.useFlush();
+            KeyHandler.flushPressed = false;
+        }
+        if (KeyHandler.hammerPressed) {
+            pm.useHammer();
+            KeyHandler.hammerPressed = false;
+        }
+        if (KeyHandler.patchPressed) {
+            pm.usePatch();
+            KeyHandler.patchPressed = false;
+        }
+    }
+
+    private void handleUpgradeKeys() {
+        if (KeyHandler.leftPressed) {
+            pm.moveUpgradeSelection(-1);
+            KeyHandler.leftPressed = false;
+        }
+        if (KeyHandler.rightPressed) {
+            pm.moveUpgradeSelection(1);
+            KeyHandler.rightPressed = false;
+        }
+        if (KeyHandler.numberPressed > 0) {
+            pm.selectUpgrade(KeyHandler.numberPressed - 1);
+            KeyHandler.numberPressed = 0;
+            pm.confirmUpgrade();
+        } else if (KeyHandler.enterPressed || KeyHandler.spacePressed) {
+            pm.confirmUpgrade();
+        }
+        KeyHandler.enterPressed = false;
+        KeyHandler.spacePressed = false;
+    }
+
+    private void handleTargetKeys() {
+        if (KeyHandler.upPressed) {
+            pm.moveCursor(0, -1);
+            KeyHandler.upPressed = false;
+        }
+        if (KeyHandler.downPressed) {
+            pm.moveCursor(0, 1);
+            KeyHandler.downPressed = false;
+        }
+        if (KeyHandler.leftPressed) {
+            pm.moveCursor(-1, 0);
+            KeyHandler.leftPressed = false;
+        }
+        if (KeyHandler.rightPressed) {
+            pm.moveCursor(1, 0);
+            KeyHandler.rightPressed = false;
+        }
+        if (KeyHandler.spacePressed) {
+            pm.markTarget();
+            KeyHandler.spacePressed = false;
+        }
+        if (KeyHandler.escapePressed) {
+            pm.cancelTarget();
+            KeyHandler.escapePressed = false;
+        } else if (KeyHandler.enterPressed) {
+            pm.confirmTarget();
+            KeyHandler.enterPressed = false;
+        }
+    }
+
+    private void handleBossScreenKeys() {
+        if (KeyHandler.enterPressed || KeyHandler.spacePressed) {
+            pm.confirmBossScreen();
+        }
+        KeyHandler.enterPressed = false;
+        KeyHandler.spacePressed = false;
     }
 
     private void resetGame() {
         pm = new PlayManager();
         renderer = new Renderer();
-        KeyHandler.resetPressed = false;
+        KeyHandler.clearActions();
         KeyHandler.pausePressed = false;
-        KeyHandler.upPressed = false;
-        KeyHandler.downPressed = false;
-        KeyHandler.leftPressed = false;
-        KeyHandler.rightPressed = false;
-        KeyHandler.spacePressed = false;
     }
 
     public void paintComponent(Graphics g) {

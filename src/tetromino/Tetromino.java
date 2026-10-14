@@ -69,6 +69,23 @@ public class Tetromino {
         return distance;
     }
 
+    public boolean occupies(int boardCol, int boardRow) {
+        for (int[] block : getBlocks()) {
+            if (block[0] == boardCol && block[1] == boardRow) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // If the board changed under the piece (rows moved), moves it up until it
+    // doesn't overlap any blocks. Rows above the board are always free
+    public void moveUpUntilFits() {
+        for (int i = 0; i <= Board.ROWS && !fits(cells, col, row); ++i) {
+            --row;
+        }
+    }
+
     // Moves the piece by (dx, dy) cells if there is room
     public boolean tryMove(int dx, int dy) {
         return tryPlace(cells, col + dx, row + dy);
