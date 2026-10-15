@@ -3,9 +3,7 @@ package gui;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.util.ArrayList;
 import java.util.List;
 import upgrades.Upgrade;
 import upgrades.UpgradeSelection;
@@ -13,8 +11,8 @@ import upgrades.UpgradeSelection;
 // Draws the upgrade selection screen over the game. It only shows the options,
 // choosing is done by PlayManager
 class UpgradeMenu {
-    private static final int CARD_WIDTH = 320;
-    private static final int CARD_HEIGHT = 260;
+    private static final int CARD_WIDTH = 300;
+    private static final int CARD_HEIGHT = 110;
     private static final int CARD_GAP = 30;
     private static final int CARD_TOP = 210;
     private static final int CARD_PADDING = 20;
@@ -27,8 +25,8 @@ class UpgradeMenu {
         g2.fillRect(0, 0, GamePanel.WIDTH, GamePanel.HEIGHT);
 
         g2.setColor(Color.white);
-        g2.setFont(new Font("Arial", Font.BOLD, 40));
-        Renderer.drawCentered(g2, "CHOOSE AN UPGRADE", GamePanel.WIDTH / 2, 150);
+        g2.setFont(new Font("Arial", Font.PLAIN, 40));
+        Renderer.drawCentered(g2, "Choose an upgrade", GamePanel.WIDTH / 2, 150);
 
         List<Upgrade> options = selection.getOptions();
         int totalWidth = options.size() * CARD_WIDTH + (options.size() - 1) * CARD_GAP;
@@ -60,48 +58,20 @@ class UpgradeMenu {
         int textX = x + CARD_PADDING;
         int y = CARD_TOP + 45;
         g2.setColor(selected ? SELECTED_COLOR : Color.white);
-        g2.setFont(new Font("Arial", Font.BOLD, 28));
+        g2.setFont(new Font("Arial", Font.PLAIN, 28));
         g2.drawString((index + 1) + ". " + upgrade.getName(), textX, y);
 
         y += 35;
         g2.setColor(Color.lightGray);
         g2.setFont(new Font("Arial", Font.PLAIN, 18));
         g2.drawString(levelText(upgrade), textX, y);
-
-        y += 40;
-        g2.setColor(Color.white);
-        g2.setFont(new Font("Arial", Font.PLAIN, 20));
-        for (String line : wrap(g2, upgrade.getDescription(), CARD_WIDTH - 2 * CARD_PADDING)) {
-            g2.drawString(line, textX, y);
-            y += 26;
-        }
     }
 
     private String levelText(Upgrade upgrade) {
         if (upgrade.isSingleUse()) {
-            return "SINGLE USE";
+            return "Single Use";
         }
-        return "LEVEL " + upgrade.getLevel() + " -> " + (upgrade.getLevel() + 1)
-                + "   (MAX " + upgrade.getMaxLevel() + ")";
-    }
-
-    // Splits the text into lines that fit in width pixels
-    private List<String> wrap(Graphics2D g2, String text, int width) {
-        FontMetrics metrics = g2.getFontMetrics();
-        List<String> lines = new ArrayList<>();
-        String line = "";
-        for (String word : text.split(" ")) {
-            String longer = line.isEmpty() ? word : line + " " + word;
-            if (metrics.stringWidth(longer) > width && !line.isEmpty()) {
-                lines.add(line);
-                line = word;
-            } else {
-                line = longer;
-            }
-        }
-        if (!line.isEmpty()) {
-            lines.add(line);
-        }
-        return lines;
+        return "Level " + upgrade.getLevel() + " -> " + (upgrade.getLevel() + 1)
+                + "   (Max " + upgrade.getMaxLevel() + ")";
     }
 }

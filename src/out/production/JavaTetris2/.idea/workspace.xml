@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="fef42e3a-09b1-4952-9cb3-adb2208d9a1e" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "ShadowBoy609"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/xoes0teric/tetris.git",
+    "accountId": "699cfe2a-ea05-44a6-998d-0d79c5e57e72"
+  }
+}]]></component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.4983688785227642" />
+      <entry key="MS500" value="3.7884473148140168" />
+      <entry key="S2" value="5.287372542694703" />
+      <entry key="S5" value="5.698723619233173" />
+      <entry key="S10" value="5.846500755533862" />
+      <entry key="S30" value="5.948182480784192" />
+      <entry key="S60" value="5.974008874761946" />
+      <entry key="M2" value="5.986983771874927" />
+      <entry key="M5" value="5.994788539510932" />
+      <entry key="M10" value="5.99739344075445" />
+      <entry key="M15" value="5.99826210955495" />
+      <entry key="M30" value="5.999130962622069" />
+      <entry key="H1" value="5.999565458269422" />
+      <entry key="H2" value="5.999782723373961" />
+      <entry key="H4" value="5.99989136024675" />
+      <entry key="D1" value="5.999981893174423" />
+      <entry key="W1" value="5.999997413305733" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="1.4462722622783009" />
+      <entry key="MS500" value="3.763801553092268" />
+      <entry key="S2" value="5.279035770684234" />
+      <entry key="S5" value="5.695152930805239" />
+      <entry key="S10" value="5.844673127267201" />
+      <entry key="S30" value="5.947563582781387" />
+      <entry key="S60" value="5.97369819594758" />
+      <entry key="M2" value="5.986828123590468" />
+      <entry key="M5" value="5.994726205883542" />
+      <entry key="M10" value="5.997362261539867" />
+      <entry key="M15" value="5.9982413206550085" />
+      <entry key="M30" value="5.999120566793372" />
+      <entry key="H1" value="5.9995602600103375" />
+      <entry key="H2" value="5.999780124158229" />
+      <entry key="H4" value="5.999890060617337" />
+      <entry key="D1" value="5.999981676566527" />
+      <entry key="W1" value="5.999997382361675" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 7,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3KRx0GclFkjKfYSZQLPPiUuX3bO" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.Main.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/alex/Documents/CBL/JavaTetris2/src",
+    "to.speed.mode.migration.done": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-a203e0a19954-intellij.indexing.shared.core-IU-262.10968.63" />
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-IU-262.10968.63" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="fef42e3a-09b1-4952-9cb3-adb2208d9a1e" name="Changes" comment="" />
+      <created>1791533956190</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1791533956190</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
