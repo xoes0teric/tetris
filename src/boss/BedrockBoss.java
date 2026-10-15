@@ -1,6 +1,7 @@
 package boss;
 
 import game.Board;
+import java.util.List;
 
 /**
     Bedrock, the first boss
@@ -8,6 +9,7 @@ import game.Board;
     It pushes unbreakable rows under the stack, so there is less room to play.
     The player has to score TARGET_SCORE points before the time runs out.
     Winning removes the rows again, losing ends the run.
+    During the fight it uses its abilities, see AbilityCycle.
 
     The game asks the boss what to do, the boss doesn't control the game.
     Its values can be changed with the second constructor to balance it.
@@ -22,22 +24,25 @@ public class BedrockBoss {
     private final int unbreakableRows;
     private final int targetScore;
     private final long timeLimitNanos;
+    private final AbilityCycle abilities;
 
     private BossOutcome outcome = BossOutcome.WAITING;
     private long remainingNanos;
     private int score = 0;
 
     public BedrockBoss() {
-        this(TRIGGER_LINES, UNBREAKABLE_ROWS, TARGET_SCORE, TIME_LIMIT_NANOS);
+        this(TRIGGER_LINES, UNBREAKABLE_ROWS, TARGET_SCORE, TIME_LIMIT_NANOS,
+                List.of(BossAbility.INVERT_CONTROLS, BossAbility.FORCE_DROP));
     }
 
     public BedrockBoss(int triggerLines, int unbreakableRows, int targetScore,
-            long timeLimitNanos) {
+            long timeLimitNanos, List<BossAbility> abilities) {
         this.triggerLines = triggerLines;
         this.unbreakableRows = unbreakableRows;
         this.targetScore = targetScore;
         this.timeLimitNanos = timeLimitNanos;
         this.remainingNanos = timeLimitNanos;
+        this.abilities = new AbilityCycle(abilities);
     }
 
     public String getName() {
@@ -45,7 +50,10 @@ public class BedrockBoss {
     }
 
     public String getDescription() {
+        List<String> names = abilities.getAbilities().stream()
+                .map(BossAbility::getName).toList();
         return unbreakableRows + " rows of unbreakable stone rise from below."
+                + (names.isEmpty() ? "" : " Abilities: " + String.join(", ", names) + ".")
                 + " Score " + targetScore + " points before time runs out!";
     }
 
@@ -83,6 +91,18 @@ public class BedrockBoss {
         if (remainingNanos == 0) {
             outcome = BossOutcome.LOST;
         }
+    }
+
+    // Counts down to the next ability. Only called while the piece can be played,
+    // so the boss doesn't strike while a menu is open
+    public void tickAbilities(long elapsedNanos) {
+        if (outcome == BossOutcome.RUNNING) {
+            abilities.tick(elapsedNanos);
+        }
+    }
+
+    public AbilityCycle getAbilities() {
+        return abilities;
     }
 
     // Points the player earned during the fight

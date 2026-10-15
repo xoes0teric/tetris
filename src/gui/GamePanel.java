@@ -96,7 +96,13 @@ public class GamePanel extends JPanel implements Runnable {
             case BOSS_INTRO, BOSS_RESULT -> handleBossScreenKeys();
             default -> { }
         }
+        Tetromino piece = pm.getCurrentPiece(); // the boss may force it down
         pm.update(elapsed);
+        int[][] forcedFrom = pm.takeForcedDropStart();
+        if (forcedFrom != null) {
+            sound.play(dropSound, DROP_VOLUME);
+            renderer.hardDropped(piece, forcedFrom);
+        }
 
         // keys from one screen must not carry over to the next one
         if (pm.getGameState() != stateBefore) {

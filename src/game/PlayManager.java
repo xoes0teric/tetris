@@ -1,6 +1,7 @@
 package game;
 
 import boss.BedrockBoss;
+import boss.BossAbility;
 import boss.BossOutcome;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -51,6 +52,7 @@ public class PlayManager {
     private final Queue<BedrockBoss> upcomingBosses = new ArrayDeque<>();
     private BedrockBoss boss; // the boss being introduced, fought or just finished
     private boolean bossResultPending = false;
+    private int[][] forcedDropStart; // blocks before the boss forced a drop, for GUI effects
 
     public PlayManager() {
         this(new Random(), List.of(new BedrockBoss()));
@@ -90,14 +92,19 @@ public class PlayManager {
 
     public void moveLeft() {
         if (canControl()) {
-            currentPiece.tryMove(-1, 0);
+            currentPiece.tryMove(sideways(-1), 0);
         }
     }
 
     public void moveRight() {
         if (canControl()) {
-            currentPiece.tryMove(1, 0);
+            currentPiece.tryMove(sideways(1), 0);
         }
+    }
+
+    // The boss can swap left and right
+    private int sideways(int direction) {
+        return isControlsInverted() ? -direction : direction;
     }
 
     public void moveDown() {
@@ -307,7 +314,35 @@ public class PlayManager {
             upgradeSelection = null;
             finishBoss();
             resolveNextState();
+            return;
         }
+        // abilities wait while a menu is open, the clock doesn't
+        if (gameState == GameState.PLAY) {
+            boss.tickAbilities(elapsedNanos);
+            useBossAbility(boss.getAbilities().takeUsed());
+        }
+    }
+
+    // Inverted controls are handled by the boss itself, see isControlsInverted()
+    private void useBossAbility(BossAbility ability) {
+        if (ability == BossAbility.FORCE_DROP) {
+            int[][] before = currentPiece.getBlocks();
+            if (hardDrop()) {
+                forcedDropStart = before;
+            }
+        }
+    }
+
+    public boolean isControlsInverted() {
+        return isBossFightRunning() && boss.getAbilities().isControlsInverted();
+    }
+
+    // Returns where the piece was before the boss forced it down and forgets it,
+    // null if the boss didn't
+    public int[][] takeForcedDropStart() {
+        int[][] before = forcedDropStart;
+        forcedDropStart = null;
+        return before;
     }
 
     private void finishBoss() {

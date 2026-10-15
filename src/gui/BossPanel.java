@@ -1,6 +1,8 @@
 package gui;
 
+import boss.AbilityCycle;
 import boss.BedrockBoss;
+import boss.BossAbility;
 import boss.BossOutcome;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -12,7 +14,7 @@ class BossPanel {
     private static final int PANEL_X = 130;
     private static final int PANEL_Y = 420;
     private static final int PANEL_WIDTH = 320;
-    private static final int PANEL_HEIGHT = 230;
+    private static final int PANEL_HEIGHT = 270;
     private static final int BAR_HEIGHT = 16;
     private static final long LOW_TIME_NANOS = 10_000_000_000L; // timer turns red
     private static final Color BOSS_COLOR = new Color(255, 120, 60);
@@ -51,6 +53,26 @@ class BossPanel {
         y += 12;
         drawBar(g2, x, y, barWidth, (double) boss.getScore() / boss.getTargetScore(),
                 Color.green);
+
+        y += BAR_HEIGHT + 38;
+        drawAbility(g2, boss.getAbilities(), x, y);
+    }
+
+    // Warns before the boss strikes, then shows how long inverted controls last
+    private void drawAbility(Graphics2D g2, AbilityCycle abilities, int x, int y) {
+        g2.setFont(new Font("Arial", Font.BOLD, 22));
+        BossAbility warning = abilities.getWarning();
+        if (warning != null) {
+            // blinks so it's noticed while looking at the board
+            boolean on = (System.nanoTime() / 250_000_000L) % 2 == 0;
+            g2.setColor(on ? Color.yellow : BOSS_COLOR);
+            g2.drawString("! " + warning.getName() + " IN "
+                    + formatSeconds(abilities.getUntilNextNanos()), x, y);
+        } else if (abilities.isControlsInverted()) {
+            g2.setColor(Color.red);
+            g2.drawString("CONTROLS INVERTED  "
+                    + formatSeconds(abilities.getInvertedNanos()), x, y);
+        }
     }
 
     void drawIntro(Graphics2D g2, BedrockBoss boss) {
@@ -116,6 +138,12 @@ class BossPanel {
         g2.fillRect(x, y, width, BAR_HEIGHT);
         g2.setColor(color);
         g2.fillRect(x, y, (int) (width * clamped), BAR_HEIGHT);
+    }
+
+    // s.t
+    private static String formatSeconds(long nanos) {
+        long tenths = (nanos + 99_999_999L) / 100_000_000L; // round up, never show 0.0 early
+        return tenths / 10 + "." + tenths % 10;
     }
 
     // m:ss.t

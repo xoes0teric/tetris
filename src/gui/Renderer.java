@@ -172,6 +172,15 @@ public class Renderer {
 
         g2.translate(-shake[0], -shake[1]);
 
+        // The boss inverted the controls, so invert the colors too.
+        // In XOR mode white flips every pixel. Menus are drawn after, so they stay normal
+        if (pm.isControlsInverted()) {
+            g2.setXORMode(Color.black);
+            g2.setColor(Color.white);
+            g2.fillRect(0, 0, GamePanel.WIDTH, GamePanel.HEIGHT);
+            g2.setPaintMode();
+        }
+
         // Draw the screens on top of the board
         UpgradeSelection selection = pm.getUpgradeSelection();
         if (state == GameState.SELECT_UPGRADE && selection != null) {
