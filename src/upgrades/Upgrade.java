@@ -1,66 +1,56 @@
 package upgrades;
 
+import game.PlayManager;
+
 /**
-    The information about one upgrade that the selection screen needs:
-    its name, description and level
+    Base class of every upgrade
 
-    Stackable upgrades go up one level each time they are picked.
-    Single use upgrades get one charge when picked (level 1), which is spent when
-    used (back to level 0). While the charge is unused the upgrade is maxed, so it
-    isn't offered again.
+    HOW TO ADD AN UPGRADE
+    1. Make a class in this package that extends Upgrade
+    2. Call super(name, rarity, maxLevel) in its constructor
+    3. Override onPick if it should do something the moment it is picked,
+       or add methods the game can ask (like Hold.canHold) if it changes a rule
+    4. Add it to the list in Upgrader
 
-    The upgrade classes (Hold, Hammer, ...) each have one of these and read
-    its level to know what they are allowed to do.
+    Every pick raises the level by one. Upgrades are offered until they reach maxLevel.
 */
-public class Upgrade {
+public abstract class Upgrade {
+    public static final int UNLIMITED = Integer.MAX_VALUE;
+
     private final String name;
-    // descriptions[level] says what picking the upgrade at that level does
-    private final String[] descriptions;
+    private final Rarity rarity;
     private final int maxLevel;
-    private final boolean singleUse;
     private int level = 0;
 
-    public Upgrade(String name, int maxLevel, boolean singleUse, String[] descriptions) {
+    protected Upgrade(String name, Rarity rarity, int maxLevel) {
         this.name = name;
+        this.rarity = rarity;
         this.maxLevel = maxLevel;
-        this.singleUse = singleUse;
-        this.descriptions = descriptions;
+    }
+
+    // Runs every time the upgrade is picked, after the level went up
+    protected void onPick(PlayManager game) {
+    }
+
+    public final void pick(PlayManager game) {
+        ++level;
+        onPick(game);
     }
 
     public String getName() {
         return name;
     }
 
-    // What picking this upgrade (again) does
-    public String getDescription() {
-        return descriptions[Math.min(level, descriptions.length - 1)];
+    public Rarity getRarity() {
+        return rarity;
     }
 
+    // How often the upgrade was picked, 0 if never
     public int getLevel() {
         return level;
     }
 
-    public int getMaxLevel() {
-        return maxLevel;
-    }
-
-    public boolean isSingleUse() {
-        return singleUse;
-    }
-
     public boolean isAvailable() {
         return level < maxLevel;
-    }
-
-    // Raises the level by one, or gives the charge for single use upgrades
-    public void apply() {
-        if (level < maxLevel) {
-            ++level;
-        }
-    }
-
-    // Single use upgrades call this when they are used
-    public void spendCharge() {
-        level = 0;
     }
 }

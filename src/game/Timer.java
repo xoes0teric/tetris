@@ -8,7 +8,8 @@ public class Timer {
     // in frames
     private int autoDropCounter = 0;
     private int deactivateCounter = 0;
-    private int dropInterval = 60;
+    private static final int START_DROP_INTERVAL = 60;
+    private int dropInterval = START_DROP_INTERVAL;
 
     public boolean shouldDrop() {
         ++autoDropCounter;
@@ -30,6 +31,11 @@ public class Timer {
         } else if (dropInterval > 1) {
             dropInterval -= 1;
         }
+    }
+
+    // Undoes one speedUp (Slowdown upgrade), never slower than the start
+    public void slowDown() {
+        dropInterval = Math.min(START_DROP_INTERVAL, dropInterval + 10);
     }
 
     public void resetAutoDropCounter() {

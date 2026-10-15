@@ -34,10 +34,7 @@ public class UpgradeSelection {
         }
     }
 
-    // Applies the highlighted upgrade and returns it
-    public Upgrade confirm() {
-        Upgrade chosen = options.get(selected);
-        chosen.apply();
-        return chosen;
+    public Upgrade getSelectedUpgrade() {
+        return options.get(selected);
     }
 }

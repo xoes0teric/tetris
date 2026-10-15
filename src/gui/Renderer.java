@@ -15,17 +15,14 @@ import java.util.ArrayList;
 import java.util.List;
 import tetromino.Shape;
 import tetromino.Tetromino;
-import upgrades.Hammer;
 import upgrades.Hold;
-import upgrades.Patch;
 import upgrades.UpgradeSelection;
-import upgrades.Upgrader;
 
 // Draws the game. This is the only class that turns cells into pixels
 public class Renderer {
     private static final int BLOCK_SIZE = 30; // width and height of one cell, in pixels
     private static final int BLOCK_MARGIN = 2; // gap around each block, in pixels
-    private static final int SMALL_BLOCK_SIZE = 18; // blocks in the hold slots
+    private static final int SMALL_BLOCK_SIZE = 18; // blocks in the hold box
     private static final int TINY_BLOCK_SIZE = 13; // blocks in the later pieces frame
 
     // Main Play Area, in pixels
@@ -45,17 +42,12 @@ public class Renderer {
     private static final int LATER_WIDTH = 140;
     private static final int LATER_LABEL_HEIGHT = 25;
 
-    // Hold slots and items on the left, in pixels
+    // Hold box on the left, in pixels
     private static final int HOLD_X = 190;
     private static final int HOLD_BOX_SIZE = 80;
-    private static final int HOLD_BOX_GAP = 15;
-    private static final int ITEMS_Y = 240;
 
     private static final Color UNBREAKABLE_COLOR = new Color(90, 90, 90);
     private static final Color UNBREAKABLE_LINE_COLOR = new Color(140, 140, 140);
-    private static final Color CURSOR_VALID_COLOR = Color.white;
-    private static final Color CURSOR_INVALID_COLOR = Color.red;
-    private static final Color TARGET_COLOR = new Color(255, 200, 0, 140);
 
     // Row clear effect
     private boolean effectCounterOn;
@@ -63,15 +55,31 @@ public class Renderer {
     private final List<Integer> effectRows = new ArrayList<>();
 
     private final UpgradeMenu upgradeMenu = new UpgradeMenu();
+    private final SpinView spinView;
+    private final DropImpact dropImpact = new DropImpact();
     private final BossPanel bossPanel = new BossPanel();
+
+    public Renderer(SoundMixer mixer) {
+        spinView = new SpinView(mixer);
+    }
 
     public void draw(Graphics2D g2, PlayManager pm, boolean paused) {
         GameState state = pm.getGameState();
 
-        // Draw Play Area
+        Background.draw(g2);
+
+        // Everything up to the menus shakes after a hard drop, the background doesn't
+        int[] shake = dropImpact.shakeOffset();
+        g2.translate(shake[0], shake[1]);
+
+        // Draw Play Area, black so the blocks are easy to see on any background
+        g2.setColor(Color.black);
+        g2.fillRect(LEFT_X, TOP_Y, WIDTH, HEIGHT);
         g2.setColor(Color.white);
         g2.setStroke(new BasicStroke(4f));
         g2.drawRect(LEFT_X - 4, TOP_Y - 4, WIDTH + 8, HEIGHT + 8);
+
+        dropImpact.drawTrails(g2);
 
         // Draw Next Piece Frame
         int x = RIGHT_X + 100;
@@ -146,19 +154,9 @@ public class Renderer {
             }
         }
 
-        Upgrader upgrader = pm.getUpgrader();
-        drawHold(g2, upgrader.getHold());
-        drawItems(g2, upgrader);
+        dropImpact.drawEffects(g2);
 
-        if (state == GameState.AIM_HAMMER) {
-            Hammer hammer = upgrader.getHammer();
-            drawAim(g2, hammer.getTargetCells(), hammer.getCursorCells(),
-                    hammer.isCursorValid(), hammer.getHelpText());
-        } else if (state == GameState.AIM_PATCH) {
-            Patch patch = upgrader.getPatch();
-            drawAim(g2, patch.getTargetCells(), patch.getCursorCells(),
-                    patch.isCursorValid(), patch.getHelpText());
-        }
+        drawHold(g2, pm.getUpgrader().get(Hold.class));
 
         BedrockBoss boss = pm.getBoss();
         if (boss != null && boss.getOutcome() != BossOutcome.WAITING) {
@@ -172,10 +170,14 @@ public class Renderer {
         g2.setFont(new Font("Times New Roman", Font.ITALIC, 60));
         g2.drawString("++Tetris", x + 20, y);
 
+        g2.translate(-shake[0], -shake[1]);
+
         // Draw the screens on top of the board
         UpgradeSelection selection = pm.getUpgradeSelection();
         if (state == GameState.SELECT_UPGRADE && selection != null) {
             upgradeMenu.draw(g2, selection, pm.isBossFightRunning());
+        } else if (state == GameState.GAMBLE && pm.getSpin() != null) {
+            spinView.draw(g2, pm.getSpin(), paused);
         } else if (state == GameState.BOSS_INTRO && boss != null) {
             bossPanel.drawIntro(g2, boss);
         } else if (state == GameState.BOSS_RESULT && boss != null) {
@@ -194,6 +196,21 @@ public class Renderer {
             y = TOP_Y + 320;
             g2.drawString("PAUSED", x, y);
         }
+    }
+
+    // Starts the hard drop effects. fromBlocks are the piece's cells before it dropped
+    public void hardDropped(Tetromino piece, int[][] fromBlocks) {
+        dropImpact.start(toPixels(fromBlocks), toPixels(piece.getBlocks()), BLOCK_SIZE,
+                piece.getShape().getColor());
+    }
+
+    // Top left corner of each cell, in pixels
+    private List<int[]> toPixels(int[][] cells) {
+        List<int[]> pixels = new ArrayList<>();
+        for (int[] cell : cells) {
+            pixels.add(new int[]{cellX(cell[0]), cellY(cell[1])});
+        }
+        return pixels;
     }
 
     // Pieces after the next one, only shown with See the Future
@@ -217,7 +234,7 @@ public class Renderer {
     }
 
     private void drawHold(Graphics2D g2, Hold hold) {
-        if (hold.getSlotCount() == 0) {
+        if (!hold.isUnlocked()) {
             return;
         }
         g2.setColor(Color.white);
@@ -225,60 +242,18 @@ public class Renderer {
         g2.drawString("HOLD", HOLD_X, TOP_Y + 25);
 
         int boxY = TOP_Y + 40;
-        for (int slot = 0; slot < hold.getSlotCount(); ++slot) {
-            int boxX = HOLD_X + slot * (HOLD_BOX_SIZE + HOLD_BOX_GAP);
-            // gray frames show that hold was already used for this piece
-            g2.setColor(hold.isUsedThisPiece() ? Color.gray : Color.white);
-            g2.setStroke(new BasicStroke(3f));
-            g2.drawRect(boxX, boxY, HOLD_BOX_SIZE, HOLD_BOX_SIZE);
-            Shape shape = hold.getSlot(slot);
-            if (shape != null) {
-                drawShapeCentered(g2, shape, boxX + HOLD_BOX_SIZE / 2,
-                        boxY + HOLD_BOX_SIZE / 2, SMALL_BLOCK_SIZE);
-            }
-            g2.setColor(Color.white);
-            g2.setFont(new Font("Arial", Font.PLAIN, 18));
-            drawCentered(g2, "[" + Hold.getSlotKey(slot) + "]",
-                    boxX + HOLD_BOX_SIZE / 2, boxY + HOLD_BOX_SIZE + 22);
-        }
-    }
-
-    // The single use upgrades the player has
-    private void drawItems(Graphics2D g2, Upgrader upgrader) {
-        List<String> items = new ArrayList<>();
-        if (upgrader.getHammer().hasCharge()) {
-            items.add("[H] HAMMER");
-        }
-        if (upgrader.getPatch().hasCharge()) {
-            items.add("[G] PATCH");
-        }
-        if (upgrader.getFlush().hasCharge()) {
-            items.add("[F] FLUSH");
-        }
-        g2.setColor(Color.white);
-        g2.setFont(new Font("Arial", Font.PLAIN, 20));
-        int y = ITEMS_Y;
-        for (String item : items) {
-            g2.drawString(item, HOLD_X, y);
-            y += 26;
-        }
-    }
-
-    // Shows where the hammer or patch is aimed. Cells are {column, row}
-    private void drawAim(Graphics2D g2, List<int[]> targetCells, List<int[]> cursorCells,
-            boolean cursorValid, String helpText) {
-        g2.setColor(TARGET_COLOR);
-        for (int[] cell : targetCells) {
-            g2.fillRect(cellX(cell[0]), cellY(cell[1]), BLOCK_SIZE, BLOCK_SIZE);
-        }
-        g2.setColor(cursorValid ? CURSOR_VALID_COLOR : CURSOR_INVALID_COLOR);
+        // a gray frame shows that hold was already used for this piece
+        g2.setColor(hold.isUsedThisPiece() ? Color.gray : Color.white);
         g2.setStroke(new BasicStroke(3f));
-        for (int[] cell : cursorCells) {
-            g2.drawRect(cellX(cell[0]), cellY(cell[1]), BLOCK_SIZE, BLOCK_SIZE);
+        g2.drawRect(HOLD_X, boxY, HOLD_BOX_SIZE, HOLD_BOX_SIZE);
+        Shape shape = hold.getHeld();
+        if (shape != null) {
+            drawShapeCentered(g2, shape, HOLD_X + HOLD_BOX_SIZE / 2,
+                    boxY + HOLD_BOX_SIZE / 2, SMALL_BLOCK_SIZE);
         }
         g2.setColor(Color.white);
-        g2.setFont(new Font("Arial", Font.PLAIN, 20));
-        drawCentered(g2, helpText, GamePanel.WIDTH / 2, BOTTOM_Y + 45);
+        g2.setFont(new Font("Arial", Font.PLAIN, 18));
+        drawCentered(g2, "[C]", HOLD_X + HOLD_BOX_SIZE / 2, boxY + HOLD_BOX_SIZE + 22);
     }
 
     // Draws the shape so that its first block is at (x, y), like the next piece always was

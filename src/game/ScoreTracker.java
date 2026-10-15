@@ -27,8 +27,9 @@ public class ScoreTracker {
         return score;
     }
 
-    // Returns the points earned for the cleared lines
-    public int countClearedLines(List<Integer> cleared) {
+    // Returns the points earned for the cleared lines.
+    // multiplierPercent comes from the Score Multiplier upgrade, 100 means x1
+    public int countClearedLines(List<Integer> cleared, int multiplierPercent) {
         for (int i = 0; i < cleared.size(); ++i) {
             ++linesCleared;
             if (linesCleared % 10 == 0) {
@@ -39,14 +40,9 @@ public class ScoreTracker {
         int earned = 0;
         if (!cleared.isEmpty()) {
             int singleLineScore = 10 * level;
-            earned = singleLineScore * cleared.size();
+            earned = singleLineScore * cleared.size() * multiplierPercent / 100;
             score += earned;
         }
         return earned;
-    }
-
-    // Points that don't come from line clears (like the hammer)
-    public void addPoints(int points) {
-        score += points;
     }
 }

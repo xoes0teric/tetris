@@ -13,7 +13,7 @@ import game.Board;
     Its values can be changed with the second constructor to balance it.
 */
 public class BedrockBoss {
-    public static final int TRIGGER_LINES = 30;
+    public static final int TRIGGER_LINES = 10;
     public static final int UNBREAKABLE_ROWS = 4;
     public static final int TARGET_SCORE = 300;
     public static final long TIME_LIMIT_NANOS = 120_000_000_000L; // 2 minutes

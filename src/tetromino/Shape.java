@@ -13,7 +13,9 @@ public enum Shape {
     S(Color.green,      3, new int[][]{{1, 1}, {1, 0}, {2, 1}, {2, 2}}),
     Z(Color.red,        3, new int[][]{{1, 1}, {1, 0}, {0, 1}, {0, 2}}),
     L(Color.orange,     3, new int[][]{{1, 1}, {1, 0}, {1, 2}, {2, 2}}),
-    J(Color.blue,       3, new int[][]{{1, 1}, {1, 0}, {1, 2}, {0, 2}});
+    J(Color.blue,       3, new int[][]{{1, 1}, {1, 0}, {1, 2}, {0, 2}}),
+    // Not a real tetromino: a single block from the Bomb upgrade, never in the bag
+    BOMB(Color.white,   1, new int[][]{{0, 0}});
 
     private final Color color;
     private final int boxSize; // width and height of the box, in blocks
@@ -35,5 +37,10 @@ public enum Shape {
 
     public int[][] getCells() {
         return cells;
+    }
+
+    // Whether the shape is one of the 7 tetrominoes the bag is filled with
+    public boolean isInBag() {
+        return this != BOMB;
     }
 }

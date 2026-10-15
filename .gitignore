@@ -1,3 +1,99 @@
-*.class
+#              ███   █████     ███
+#             ░░░   ░░███     ░░░
+#     ███████ ████  ███████   ████   ███████ ████████    ██████  ████████   ██████
+#    ███░░███░░███ ░░░███░   ░░███  ███░░███░░███░░███  ███░░███░░███░░███ ███░░███
+#   ░███ ░███ ░███   ░███     ░███ ░███ ░███ ░███ ░███ ░███ ░███ ░███ ░░░ ░███████
+#   ░███ ░███ ░███   ░███ ███ ░███ ░███ ░███ ░███ ░███ ░███ ░███ ░███     ░███░░░
+# ██░░███████ █████  ░░█████  █████░░███████ ████ █████░░██████  █████    ░░██████
+#░░  ░░░░░███░░░░░    ░░░░░  ░░░░░  ░░░░░███░░░░ ░░░░░  ░░░░░░  ░░░░░      ░░░░░░
+#    ███ ░███                       ███ ░███
+#   ░░██████                       ░░██████
+#    ░░░░░░
 
-*bin/
+# ============================================
+# Java
+# ============================================
+*.class
+*.log
+*.ctxt
+.mtj.tmp/
+hs_err_pid*
+replay_pid*
+
+# Packaged output (keep gradle/wrapper and maven wrapper jars)
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+!gradle/wrapper/gradle-wrapper.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# ============================================
+# Build tools
+# ============================================
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.mvn/timing.properties
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.properties
+gradle-app.setting
+.gradletasknamecache
+
+# ============================================
+# IDEs
+# ============================================
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
+.metadata/
+
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+
+# VS Code
+.vscode/
+
+# ============================================
+# Secrets / local config
+# ============================================
+.env
+.env.*
+!.env.example
+application-local.properties
+application-local.yml
+
+# ============================================
+# Operating system
+# ============================================
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+*~
+*.swp

@@ -9,10 +9,11 @@ import java.util.Queue;
 import java.util.Random;
 import tetromino.Shape;
 import tetromino.Tetromino;
-import upgrades.Flush;
-import upgrades.Hammer;
 import upgrades.Hold;
-import upgrades.Patch;
+import upgrades.ScoreMultiplier;
+import upgrades.SeeTheFuture;
+import upgrades.Spin;
+import upgrades.Upgrade;
 import upgrades.UpgradeSelection;
 import upgrades.Upgrader;
 
@@ -32,13 +33,11 @@ public class PlayManager {
 
     private Tetromino currentPiece;
     private boolean active = true; // false once the current piece is ready to lock
-    private boolean hardDropped = false; // whether the current piece was hard dropped
     private GameState gameState = GameState.PLAY;
 
     private final Timer timer = new Timer();
     private final PiecePicker picker;
     private final ScoreTracker tracker = new ScoreTracker(timer);
-    private final ClearHistory history = new ClearHistory();
     private final Upgrader upgrader;
     // The upcoming pieces shown in the GUI. Only changed on the game thread so the
     // renderer never touches the picker
@@ -47,6 +46,7 @@ public class PlayManager {
     private final List<Integer> clearedRows = new ArrayList<>();
 
     private UpgradeSelection upgradeSelection; // open while SELECT_UPGRADE
+    private Spin spin; // running while GAMBLE
 
     private final Queue<BedrockBoss> upcomingBosses = new ArrayDeque<>();
     private BedrockBoss boss; // the boss being introduced, fought or just finished
@@ -74,7 +74,7 @@ public class PlayManager {
     }
 
     private void refreshNextShapes() {
-        nextShapes = List.copyOf(picker.peek(upgrader.getSeeTheFuture().getPreviewCount()));
+        nextShapes = List.copyOf(picker.peek(upgrader.get(SeeTheFuture.class).getPreviewCount()));
     }
 
     // The falling piece can only be moved during normal play
@@ -107,30 +107,35 @@ public class PlayManager {
         }
     }
 
-    public void hardDrop() {
-        if (canControl()) {
-            while (currentPiece.tryMove(0, 1)) {
-            }
-            active = false;
-            hardDropped = true;
+    // Returns whether the piece was dropped
+    public boolean hardDrop() {
+        if (!canControl()) {
+            return false;
         }
+        while (currentPiece.tryMove(0, 1)) {
+        }
+        active = false;
+        return true;
     }
 
-    // Swaps the falling piece with a hold slot (needs the Hold upgrade)
-    public void hold(int slot) {
-        Hold hold = upgrader.getHold();
-        if (!canControl() || !hold.canHold(slot)) {
+    // Swaps the falling piece with the held one (needs the Hold upgrade)
+    public void hold() {
+        Hold hold = upgrader.get(Hold.class);
+        if (!canControl() || !hold.canHold()) {
             return;
         }
-        Shape held = hold.swap(slot, currentPiece.getShape());
+        Shape held = hold.swap(currentPiece.getShape());
         currentPiece = held == null ? pickPiece() : new Tetromino(held, board);
         currentPiece.place(SPAWN_COL, SPAWN_ROW);
-        hardDropped = false;
         timer.resetCounters();
     }
 
     public void update(long elapsedNanos) {
         updateBoss(elapsedNanos);
+        if (gameState == GameState.GAMBLE) {
+            updateSpin(elapsedNanos);
+            return;
+        }
         if (gameState != GameState.PLAY) {
             return;
         }
@@ -152,10 +157,8 @@ public class PlayManager {
 
     private void lockPiece() {
         board.lock(currentPiece);
-        history.countPiece();
-        upgrader.getHold().onPieceLocked();
-        Shape lockedShape = currentPiece.getShape();
-        boolean wasHardDropped = hardDropped;
+        upgrader.get(Hold.class).onPieceLocked();
+        Tetromino locked = currentPiece;
 
         // if the first block is still on the spawn cell, the piece couldn't move at all,
         // so the stack has reached the top (game over)
@@ -168,42 +171,37 @@ public class PlayManager {
         currentPiece = pickPiece();
         currentPiece.place(SPAWN_COL, SPAWN_ROW);
         active = true;
-        hardDropped = false;
         timer.resetCounters();
 
-        // when a piece locks, check if line(s) can be deleted
-        List<Integer> cleared = board.clearFullRows();
-        if (!cleared.isEmpty()) {
-            int points = tracker.countClearedLines(cleared);
-            recordClear(ClearSource.LINE_CLEAR, cleared.size(), cleared,
-                    cleared.size() * Board.COLUMNS, points, lockedShape, wasHardDropped);
+        // a bomb clears its whole row, full or not
+        List<Integer> cleared = new ArrayList<>();
+        if (locked.getShape() == Shape.BOMB) {
+            int row = locked.getBlocks()[0][1];
+            board.destroyRow(row);
+            cleared.add(row);
         }
-        afterBoardChange();
+        // when a piece locks, check if line(s) can be deleted
+        cleared.addAll(board.clearFullRows());
+        if (!cleared.isEmpty()) {
+            int points = tracker.countClearedLines(cleared,
+                    upgrader.get(ScoreMultiplier.class).getPercent());
+            clearedRows.addAll(cleared);
+            addBossScore(points);
+        }
+
+        // rows moved, make sure the falling piece doesn't overlap blocks
+        currentPiece.moveUpUntilFits();
+        resolveNextState();
     }
 
-    // Saves the clear for later and gives its points to the boss
-    private void recordClear(ClearSource source, int lines, List<Integer> rows, int blocks,
-            int points, Shape piece, boolean wasHardDropped) {
-        boolean duringBoss = isBossFightRunning();
-        history.record(new ClearEvent(source, lines, rows, blocks, points,
-                tracker.getLevel(), tracker.getLinesCleared(), piece,
-                history.getPiecesSinceLastEvent(), wasHardDropped, board.isEmpty(), duringBoss));
-        clearedRows.addAll(rows);
-        // Combo is not implemented yet, a combo tracker would read the new event here
-
-        if (duringBoss) {
+    // Gives the points to the boss while a fight is running
+    private void addBossScore(int points) {
+        if (isBossFightRunning()) {
             boss.addScore(points);
             if (boss.getOutcome() != BossOutcome.RUNNING) {
                 finishBoss();
             }
         }
-    }
-
-    // Called after anything changes the board
-    private void afterBoardChange() {
-        // rows moved, make sure the falling piece doesn't overlap blocks
-        currentPiece.moveUpUntilFits();
-        resolveNextState();
     }
 
     // Picks the next screen: boss result, then upgrade selection, then boss intro, then play
@@ -213,6 +211,10 @@ public class PlayManager {
         }
         if (bossResultPending) {
             gameState = GameState.BOSS_RESULT;
+            return;
+        }
+        if (spin != null) {
+            gameState = GameState.GAMBLE;
             return;
         }
         while (upgrader.isSelectionDue(getLines())) {
@@ -250,101 +252,37 @@ public class PlayManager {
         if (gameState != GameState.SELECT_UPGRADE) {
             return;
         }
-        upgradeSelection.confirm();
+        upgradeSelection.getSelectedUpgrade().pick(this);
         upgradeSelection = null;
         refreshNextShapes(); // See the Future may show more now
         resolveNextState();
     }
 
-    // ---- Hammer, patch and flush ----
+    // ---- Gamble ----
 
-    public void useHammer() {
-        Hammer hammer = upgrader.getHammer();
-        if (canControl() && hammer.hasCharge()) {
-            hammer.startAiming(board);
-            gameState = GameState.AIM_HAMMER;
+    // Called by Gamble when it is picked, the result is given when the spin ends
+    public void startSpin(Spin spin) {
+        this.spin = spin;
+    }
+
+    private void updateSpin(long elapsedNanos) {
+        spin.update(elapsedNanos);
+        if (spin.isFinished()) {
+            Upgrade result = spin.getResult();
+            spin = null;
+            result.pick(this);
+            refreshNextShapes();
+            resolveNextState();
         }
     }
 
-    public void usePatch() {
-        Patch patch = upgrader.getPatch();
-        if (canControl() && patch.hasCharge()) {
-            patch.startAiming(board, currentPiece);
-            gameState = GameState.AIM_PATCH;
+    // Pushes garbage rows up from the bottom, each with a gap in the same random column
+    public void addGarbageRows(int count) {
+        int gapCol = upgrader.getRandom().nextInt(Board.COLUMNS);
+        if (!board.addGarbageRows(count, gapCol)) {
+            gameState = GameState.GAME_OVER;
         }
-    }
-
-    public boolean isAiming() {
-        return gameState == GameState.AIM_HAMMER || gameState == GameState.AIM_PATCH;
-    }
-
-    public void moveCursor(int dCol, int dRow) {
-        if (gameState == GameState.AIM_HAMMER) {
-            upgrader.getHammer().moveCursor(dRow);
-        } else if (gameState == GameState.AIM_PATCH) {
-            upgrader.getPatch().moveCursor(dCol, dRow);
-        }
-    }
-
-    public void markTarget() {
-        if (gameState == GameState.AIM_PATCH) {
-            upgrader.getPatch().mark();
-        }
-    }
-
-    public void cancelTarget() {
-        if (isAiming()) {
-            gameState = GameState.PLAY;
-        }
-    }
-
-    public void confirmTarget() {
-        if (gameState == GameState.AIM_HAMMER) {
-            confirmHammer();
-        } else if (gameState == GameState.AIM_PATCH) {
-            confirmPatch();
-        }
-    }
-
-    private void confirmHammer() {
-        Hammer hammer = upgrader.getHammer();
-        if (!hammer.canConfirm()) {
-            return;
-        }
-        int row = hammer.getAimRow();
-        int blocks = hammer.confirm();
-        int points = hammer.getPoints(blocks, tracker.getLevel());
-        tracker.addPoints(points);
-        // whole rows only move down, so destroying a row can't complete another one
-        recordClear(ClearSource.HAMMER, 0, List.of(row), blocks, points, null, false);
-        afterBoardChange();
-    }
-
-    private void confirmPatch() {
-        Patch patch = upgrader.getPatch();
-        if (!patch.canConfirm()) {
-            return;
-        }
-        patch.confirm();
-        // lines completed by the patch are normal line clears
-        List<Integer> cleared = board.clearFullRows();
-        if (!cleared.isEmpty()) {
-            int points = tracker.countClearedLines(cleared);
-            recordClear(ClearSource.PATCH, cleared.size(), cleared,
-                    cleared.size() * Board.COLUMNS, points, null, false);
-        }
-        afterBoardChange();
-    }
-
-    public void useFlush() {
-        Flush flush = upgrader.getFlush();
-        if (!canControl() || !flush.canUse(board)) {
-            return;
-        }
-        List<Integer> rows = flush.bottomRows(board);
-        int blocks = flush.use(board);
-        recordClear(ClearSource.FLUSH, 0, rows, blocks, 0, null, false);
-        afterBoardChange();
+        currentPiece.moveUpUntilFits();
     }
 
     // ---- Boss ----
@@ -357,7 +295,7 @@ public class PlayManager {
     // Only a real pause (the game doesn't call update) stops it
     private boolean bossClockRuns() {
         return gameState == GameState.PLAY || gameState == GameState.SELECT_UPGRADE
-                || isAiming();
+                || gameState == GameState.GAMBLE;
     }
 
     private void updateBoss(long elapsedNanos) {
@@ -432,16 +370,25 @@ public class PlayManager {
         return upgrader;
     }
 
+    // Upgrades use these to change the game when they are picked
+    public PiecePicker getPicker() {
+        return picker;
+    }
+
+    public Timer getTimer() {
+        return timer;
+    }
+
     public UpgradeSelection getUpgradeSelection() {
         return upgradeSelection;
     }
 
-    public BedrockBoss getBoss() {
-        return boss;
+    public Spin getSpin() {
+        return spin;
     }
 
-    public ClearHistory getHistory() {
-        return history;
+    public BedrockBoss getBoss() {
+        return boss;
     }
 
     public int getLevel() {

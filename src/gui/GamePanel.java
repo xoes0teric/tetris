@@ -7,6 +7,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import javax.swing.JPanel;
+import tetromino.Tetromino;
 
 public class GamePanel extends JPanel implements Runnable {
     // Window size, in pixels
@@ -18,6 +19,11 @@ public class GamePanel extends JPanel implements Runnable {
     Renderer renderer;
     private long lastUpdateTime;
 
+    // One mixer for all sounds, kept when the game is reset
+    private final SoundMixer sound = new SoundMixer();
+    private final float[] dropSound = SoundMixer.loadWav("assets/drop.wav");
+    private static final float DROP_VOLUME = 0.8f;
+
     public GamePanel() {
         // Panel Settings
         this.setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -28,7 +34,7 @@ public class GamePanel extends JPanel implements Runnable {
         this.setFocusable(true);
 
         pm = new PlayManager();
-        renderer = new Renderer();
+        renderer = new Renderer(sound);
     }
 
     public void launchGame() {
@@ -87,7 +93,6 @@ public class GamePanel extends JPanel implements Runnable {
         switch (stateBefore) {
             case PLAY -> handlePlayKeys();
             case SELECT_UPGRADE -> handleUpgradeKeys();
-            case AIM_HAMMER, AIM_PATCH -> handleTargetKeys();
             case BOSS_INTRO, BOSS_RESULT -> handleBossScreenKeys();
             default -> { }
         }
@@ -117,24 +122,17 @@ public class GamePanel extends JPanel implements Runnable {
             KeyHandler.rightPressed = false;
         }
         if (KeyHandler.spacePressed) {
-            pm.hardDrop();
+            Tetromino piece = pm.getCurrentPiece();
+            int[][] before = piece.getBlocks();
+            if (pm.hardDrop()) {
+                sound.play(dropSound, DROP_VOLUME);
+                renderer.hardDropped(piece, before);
+            }
             KeyHandler.spacePressed = false;
         }
-        if (KeyHandler.holdSlotPressed >= 0) {
-            pm.hold(KeyHandler.holdSlotPressed);
-            KeyHandler.holdSlotPressed = -1;
-        }
-        if (KeyHandler.flushPressed) {
-            pm.useFlush();
-            KeyHandler.flushPressed = false;
-        }
-        if (KeyHandler.hammerPressed) {
-            pm.useHammer();
-            KeyHandler.hammerPressed = false;
-        }
-        if (KeyHandler.patchPressed) {
-            pm.usePatch();
-            KeyHandler.patchPressed = false;
+        if (KeyHandler.holdPressed) {
+            pm.hold();
+            KeyHandler.holdPressed = false;
         }
     }
 
@@ -158,36 +156,6 @@ public class GamePanel extends JPanel implements Runnable {
         KeyHandler.spacePressed = false;
     }
 
-    private void handleTargetKeys() {
-        if (KeyHandler.upPressed) {
-            pm.moveCursor(0, -1);
-            KeyHandler.upPressed = false;
-        }
-        if (KeyHandler.downPressed) {
-            pm.moveCursor(0, 1);
-            KeyHandler.downPressed = false;
-        }
-        if (KeyHandler.leftPressed) {
-            pm.moveCursor(-1, 0);
-            KeyHandler.leftPressed = false;
-        }
-        if (KeyHandler.rightPressed) {
-            pm.moveCursor(1, 0);
-            KeyHandler.rightPressed = false;
-        }
-        if (KeyHandler.spacePressed) {
-            pm.markTarget();
-            KeyHandler.spacePressed = false;
-        }
-        if (KeyHandler.escapePressed) {
-            pm.cancelTarget();
-            KeyHandler.escapePressed = false;
-        } else if (KeyHandler.enterPressed) {
-            pm.confirmTarget();
-            KeyHandler.enterPressed = false;
-        }
-    }
-
     private void handleBossScreenKeys() {
         if (KeyHandler.enterPressed || KeyHandler.spacePressed) {
             pm.confirmBossScreen();
@@ -197,8 +165,9 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     private void resetGame() {
+        sound.stopAll();
         pm = new PlayManager();
-        renderer = new Renderer();
+        renderer = new Renderer(sound);
         KeyHandler.clearActions();
         KeyHandler.pausePressed = false;
     }
