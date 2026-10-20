@@ -56,6 +56,11 @@ public class Tetromino {
         return true;
     }
 
+    // Whether the piece doesn't overlap any blocks where it is now
+    public boolean fitsHere() {
+        return fits(cells, col, row);
+    }
+
     public boolean canMoveDown() {
         return fits(cells, col, row + 1);
     }
@@ -67,6 +72,23 @@ public class Tetromino {
             ++distance;
         }
         return distance;
+    }
+
+    public boolean occupies(int boardCol, int boardRow) {
+        for (int[] block : getBlocks()) {
+            if (block[0] == boardCol && block[1] == boardRow) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // If the board changed under the piece (rows moved), moves it up until it
+    // doesn't overlap any blocks. Rows above the board are always free
+    public void moveUpUntilFits() {
+        for (int i = 0; i <= Board.ROWS && !fits(cells, col, row); ++i) {
+            --row;
+        }
     }
 
     // Moves the piece by (dx, dy) cells if there is room
