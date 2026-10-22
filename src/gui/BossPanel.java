@@ -7,7 +7,10 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 
-// Draws the boss status panel, its introduction and its result screen
+/**
+ * Draws the boss status panel, its introduction and its result screen.
+ * It only reads the boss, it never changes it.
+ */
 class BossPanel {
     private static final int PANEL_X = 130;
     private static final int PANEL_Y = 420;
@@ -25,6 +28,13 @@ class BossPanel {
     private static final int BOX_X = (GamePanel.WIDTH - BOX_WIDTH) / 2;
     private static final int BOX_Y = 200;
 
+    /**
+     * Draws the panel next to the board with the boss name, the time left and
+     * the score, each with a progress bar.
+     *
+     * @param g2   the graphics to draw with
+     * @param boss the boss to show
+     */
     void drawStatus(Graphics2D g2, BedrockBoss boss) {
         g2.setColor(BOSS_COLOR);
         g2.setStroke(new BasicStroke(4f));
@@ -53,6 +63,12 @@ class BossPanel {
                 Color.green);
     }
 
+    /**
+     * Draws the introduction screen that explains the boss before the fight.
+     *
+     * @param g2   the graphics to draw with
+     * @param boss the boss to introduce
+     */
     void drawIntro(Graphics2D g2, BedrockBoss boss) {
         drawBox(g2);
         int centerX = GamePanel.WIDTH / 2;
@@ -79,6 +95,12 @@ class BossPanel {
         Renderer.drawCentered(g2, "Press ENTER to begin", centerX, BOX_Y + BOX_HEIGHT - 30);
     }
 
+    /**
+     * Draws the screen that shows whether the boss was beaten.
+     *
+     * @param g2   the graphics to draw with
+     * @param boss the boss that was fought
+     */
     void drawResult(Graphics2D g2, BedrockBoss boss) {
         drawBox(g2);
         int centerX = GamePanel.WIDTH / 2;
@@ -100,6 +122,11 @@ class BossPanel {
                 centerX, BOX_Y + BOX_HEIGHT - 30);
     }
 
+    /**
+     * Dims the whole window and draws the empty box for the intro or result screen.
+     *
+     * @param g2 the graphics to draw with
+     */
     private void drawBox(Graphics2D g2) {
         g2.setColor(DIM_COLOR);
         g2.fillRect(0, 0, GamePanel.WIDTH, GamePanel.HEIGHT);
@@ -110,6 +137,16 @@ class BossPanel {
         g2.drawRect(BOX_X, BOX_Y, BOX_WIDTH, BOX_HEIGHT);
     }
 
+    /**
+     * Draws a horizontal progress bar.
+     *
+     * @param g2       the graphics to draw with
+     * @param x        the left edge, in pixels
+     * @param y        the top edge, in pixels
+     * @param width    the full width of the bar, in pixels
+     * @param fraction how full the bar is, from 0 to 1 (clamped)
+     * @param color    the color of the filled part
+     */
     private void drawBar(Graphics2D g2, int x, int y, int width, double fraction, Color color) {
         double clamped = Math.max(0, Math.min(1, fraction));
         g2.setColor(BAR_BACK_COLOR);
@@ -118,7 +155,12 @@ class BossPanel {
         g2.fillRect(x, y, (int) (width * clamped), BAR_HEIGHT);
     }
 
-    // m:ss.t
+    /**
+     * Formats a time as m:ss.t (minutes, seconds and tenths).
+     *
+     * @param nanos the time, in nanoseconds
+     * @return the formatted time
+     */
     private static String formatTime(long nanos) {
         long tenths = nanos / 100_000_000L;
         long minutes = tenths / 600;

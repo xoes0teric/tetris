@@ -8,6 +8,12 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import javax.swing.JPanel;
 
+/**
+ * The panel inside the window that runs the game loop.
+ *
+ * <p>It runs on its own thread at FPS frames per second. Every frame it passes the
+ * pressed keys to the PlayManager, updates the game and repaints the panel.
+ */
 public class GamePanel extends JPanel implements Runnable {
     // Window size, in pixels
     public static final int WIDTH = 1280;
@@ -18,6 +24,9 @@ public class GamePanel extends JPanel implements Runnable {
     Renderer renderer;
     private long lastUpdateTime;
 
+    /**
+     * Creates the panel, sets it up to receive key presses and creates a new game.
+     */
     public GamePanel() {
         // Panel Settings
         this.setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -31,12 +40,19 @@ public class GamePanel extends JPanel implements Runnable {
         renderer = new Renderer();
     }
 
+    /**
+     * Starts the game loop on a new thread.
+     */
     public void launchGame() {
         lastUpdateTime = System.nanoTime();
         gameThread = new Thread(this);
         gameThread.start();
     }
 
+    /**
+     * The game loop. Updates and repaints the game FPS times per second until
+     * the thread is interrupted.
+     */
     @Override
     public void run() {
         // Game Loop
@@ -65,6 +81,10 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * Runs one frame: handles reset and pause, passes the keys for the current
+     * screen to the game and updates it.
+     */
     private void update() {
         // Real time since the last update, the boss timer uses it.
         // Paused frames are skipped so the pause doesn't count
@@ -99,6 +119,10 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * Handles the keys during normal play: moving, rotating, dropping, holding
+     * and using upgrades.
+     */
     private void handlePlayKeys() {
         if (KeyHandler.upPressed) {
             pm.rotate();
@@ -138,6 +162,10 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * Handles the keys on the upgrade selection screen: left/right to choose,
+     * a number key or enter/space to take it.
+     */
     private void handleUpgradeKeys() {
         if (KeyHandler.leftPressed) {
             pm.moveUpgradeSelection(-1);
@@ -158,6 +186,10 @@ public class GamePanel extends JPanel implements Runnable {
         KeyHandler.spacePressed = false;
     }
 
+    /**
+     * Handles the keys while aiming the hammer or patch: arrows move the cursor,
+     * space marks, enter confirms and escape cancels.
+     */
     private void handleTargetKeys() {
         if (KeyHandler.upPressed) {
             pm.moveCursor(0, -1);
@@ -188,6 +220,9 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * Handles the keys on the boss intro and result screens: enter or space continues.
+     */
     private void handleBossScreenKeys() {
         if (KeyHandler.enterPressed || KeyHandler.spacePressed) {
             pm.confirmBossScreen();
@@ -196,6 +231,9 @@ public class GamePanel extends JPanel implements Runnable {
         KeyHandler.spacePressed = false;
     }
 
+    /**
+     * Throws away the current game and starts a new one.
+     */
     private void resetGame() {
         pm = new PlayManager();
         renderer = new Renderer();
@@ -203,6 +241,11 @@ public class GamePanel extends JPanel implements Runnable {
         KeyHandler.pausePressed = false;
     }
 
+    /**
+     * Draws the game. Called by Swing after repaint().
+     *
+     * @param g the graphics to draw with
+     */
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 

@@ -8,8 +8,10 @@ import java.util.List;
 import upgrades.Upgrade;
 import upgrades.UpgradeSelection;
 
-// Draws the upgrade selection screen over the game. It only shows the options,
-// choosing is done by PlayManager
+/**
+ * Draws the upgrade selection screen over the game. It only shows the options,
+ * choosing is done by PlayManager.
+ */
 class UpgradeMenu {
     private static final int CARD_WIDTH = 300;
     private static final int CARD_HEIGHT = 110;
@@ -20,6 +22,13 @@ class UpgradeMenu {
     private static final Color CARD_COLOR = new Color(30, 30, 40);
     private static final Color SELECTED_COLOR = Color.yellow;
 
+    /**
+     * Dims the game and draws one card per option, with the highlighted one in yellow.
+     *
+     * @param g2          the graphics to draw with
+     * @param selection   the options and which one is highlighted
+     * @param bossRunning whether to warn that the boss timer is still running
+     */
     void draw(Graphics2D g2, UpgradeSelection selection, boolean bossRunning) {
         g2.setColor(DIM_COLOR);
         g2.fillRect(0, 0, GamePanel.WIDTH, GamePanel.HEIGHT);
@@ -48,6 +57,15 @@ class UpgradeMenu {
         }
     }
 
+    /**
+     * Draws one option card with its number, name and level.
+     *
+     * @param g2       the graphics to draw with
+     * @param upgrade  the upgrade on the card
+     * @param index    the position of the card, starting at 0
+     * @param x        the left edge of the card, in pixels
+     * @param selected whether the card is highlighted
+     */
     private void drawCard(Graphics2D g2, Upgrade upgrade, int index, int x, boolean selected) {
         g2.setColor(CARD_COLOR);
         g2.fillRect(x, CARD_TOP, CARD_WIDTH, CARD_HEIGHT);
@@ -67,6 +85,12 @@ class UpgradeMenu {
         g2.drawString(levelText(upgrade), textX, y);
     }
 
+    /**
+     * Returns the level line of a card, for example "Level 1 -> 2   (Max 3)".
+     *
+     * @param upgrade the upgrade on the card
+     * @return the text to show under the name
+     */
     private String levelText(Upgrade upgrade) {
         if (upgrade.isSingleUse()) {
             return "Single Use";

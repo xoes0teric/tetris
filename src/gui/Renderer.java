@@ -21,7 +21,13 @@ import upgrades.Patch;
 import upgrades.UpgradeSelection;
 import upgrades.Upgrader;
 
-// Draws the game. This is the only class that turns cells into pixels
+/**
+ * Draws the game. This is the only class that turns cells into pixels.
+ *
+ * <p>It draws the board, the falling and ghost piece, the next pieces, the score,
+ * the hold slots and items, and the screens on top (upgrades, boss, pause, game over).
+ * The upgrade and boss screens are drawn by UpgradeMenu and BossPanel.
+ */
 public class Renderer {
     private static final int BLOCK_SIZE = 30; // width and height of one cell, in pixels
     private static final int BLOCK_MARGIN = 2; // gap around each block, in pixels
@@ -67,6 +73,13 @@ public class Renderer {
     private final UpgradeMenu upgradeMenu = new UpgradeMenu();
     private final BossPanel bossPanel = new BossPanel();
 
+    /**
+     * Draws one whole frame of the game.
+     *
+     * @param g2     the graphics to draw with
+     * @param pm     the game to draw
+     * @param paused whether to show the pause banner
+     */
     public void draw(Graphics2D g2, PlayManager pm, boolean paused) {
         GameState state = pm.getGameState();
 
@@ -192,7 +205,12 @@ public class Renderer {
         }
     }
 
-    // Big text in the middle of the board, on a dark band so blocks never hide it
+    /**
+     * Draws big text in the middle of the board, on a dark band so blocks never hide it.
+     *
+     * @param g2   the graphics to draw with
+     * @param text the text to show
+     */
     private void drawBanner(Graphics2D g2, String text) {
         g2.setColor(BOARD_DIM_COLOR);
         g2.fillRect(LEFT_X, TOP_Y, WIDTH, HEIGHT);
@@ -211,7 +229,12 @@ public class Renderer {
         drawCentered(g2, text, LEFT_X + WIDTH / 2, baseline);
     }
 
-    // Pieces after the next one, only shown with See the Future
+    /**
+     * Draws the pieces after the next one, only shown with See the Future.
+     *
+     * @param g2    the graphics to draw with
+     * @param later the shapes after the next one, in order
+     */
     private void drawLaterPieces(Graphics2D g2, List<Shape> later) {
         if (later.isEmpty()) {
             return;
@@ -231,6 +254,12 @@ public class Renderer {
         }
     }
 
+    /**
+     * Draws the hold slots with their pieces and keys, only shown with the Hold upgrade.
+     *
+     * @param g2   the graphics to draw with
+     * @param hold the hold upgrade
+     */
     private void drawHold(Graphics2D g2, Hold hold) {
         if (hold.getSlotCount() == 0) {
             return;
@@ -258,7 +287,12 @@ public class Renderer {
         }
     }
 
-    // The single use upgrades the player has
+    /**
+     * Draws the list of single use upgrades the player has, with their keys.
+     *
+     * @param g2       the graphics to draw with
+     * @param upgrader the object that owns the upgrades
+     */
     private void drawItems(Graphics2D g2, Upgrader upgrader) {
         List<String> items = new ArrayList<>();
         if (upgrader.getHammer().hasCharge()) {
@@ -279,7 +313,15 @@ public class Renderer {
         }
     }
 
-    // Shows where the hammer or patch is aimed. Cells are {column, row}
+    /**
+     * Shows where the hammer or patch is aimed. Cells are {column, row}.
+     *
+     * @param g2          the graphics to draw with
+     * @param targetCells the cells that will change, filled in yellow
+     * @param cursorCells the cells under the cursor, outlined
+     * @param cursorValid whether the cursor is on a valid target (white) or not (red)
+     * @param helpText    the controls shown under the board
+     */
     private void drawAim(Graphics2D g2, List<int[]> targetCells, List<int[]> cursorCells,
             boolean cursorValid, String helpText) {
         g2.setColor(TARGET_COLOR);
@@ -296,7 +338,14 @@ public class Renderer {
         drawCentered(g2, helpText, GamePanel.WIDTH / 2, BOTTOM_Y + 45);
     }
 
-    // Draws the shape so that its first block is at (x, y), like the next piece always was
+    /**
+     * Draws the shape so that its first block is at (x, y), like the next piece always was.
+     *
+     * @param g2    the graphics to draw with
+     * @param shape the shape to draw
+     * @param x     the left edge of the first block, in pixels
+     * @param y     the top edge of the first block, in pixels
+     */
     private void drawShapeFromFirstBlock(Graphics2D g2, Shape shape, int x, int y) {
         int[][] cells = shape.getCells();
         for (int[] cell : cells) {
@@ -306,7 +355,15 @@ public class Renderer {
         }
     }
 
-    // Draws the shape with the middle of its blocks at (centerX, centerY)
+    /**
+     * Draws the shape with the middle of its blocks at (centerX, centerY).
+     *
+     * @param g2      the graphics to draw with
+     * @param shape   the shape to draw
+     * @param centerX the horizontal middle, in pixels
+     * @param centerY the vertical middle, in pixels
+     * @param size    the size of one block, in pixels
+     */
     private void drawShapeCentered(Graphics2D g2, Shape shape, int centerX, int centerY,
             int size) {
         int minCol = Integer.MAX_VALUE;
@@ -327,33 +384,73 @@ public class Renderer {
         }
     }
 
-    // Draws text with its middle at centerX
+    /**
+     * Draws text with its middle at centerX, using the current font and color.
+     *
+     * @param g2      the graphics to draw with
+     * @param text    the text to draw
+     * @param centerX the horizontal middle of the text, in pixels
+     * @param y       the baseline of the text, in pixels
+     */
     static void drawCentered(Graphics2D g2, String text, int centerX, int y) {
         FontMetrics metrics = g2.getFontMetrics();
         g2.drawString(text, centerX - metrics.stringWidth(text) / 2, y);
     }
 
-    // Left edge of a board column, in pixels
+    /**
+     * Returns the left edge of a board column.
+     *
+     * @param col the board column
+     * @return the x position, in pixels
+     */
     private int cellX(int col) {
         return LEFT_X + col * BLOCK_SIZE;
     }
 
-    // Top edge of a board row, in pixels
+    /**
+     * Returns the top edge of a board row.
+     *
+     * @param row the board row
+     * @return the y position, in pixels
+     */
     private int cellY(int row) {
         return TOP_Y + row * BLOCK_SIZE;
     }
 
+    /**
+     * Draws one block of the normal size.
+     *
+     * @param g2    the graphics to draw with
+     * @param color the color of the block
+     * @param x     the left edge, in pixels
+     * @param y     the top edge, in pixels
+     */
     private void drawBlock(Graphics2D g2, Color color, int x, int y) {
         drawBlock(g2, color, x, y, BLOCK_SIZE);
     }
 
+    /**
+     * Draws one block of any size. The margin around it scales with the size.
+     *
+     * @param g2    the graphics to draw with
+     * @param color the color of the block
+     * @param x     the left edge, in pixels
+     * @param y     the top edge, in pixels
+     * @param size  the size of the cell, in pixels
+     */
     private void drawBlock(Graphics2D g2, Color color, int x, int y, int size) {
         g2.setColor(color);
         int margin = BLOCK_MARGIN * size / BLOCK_SIZE;
         g2.fillRect(x, y, size - (margin * 2), size - (margin * 2));
     }
 
-    // Gray with a cross, so it doesn't look like a normal block
+    /**
+     * Draws an unbreakable block: gray with a cross, so it doesn't look like a normal block.
+     *
+     * @param g2 the graphics to draw with
+     * @param x  the left edge, in pixels
+     * @param y  the top edge, in pixels
+     */
     private void drawUnbreakableBlock(Graphics2D g2, int x, int y) {
         int size = BLOCK_SIZE - (BLOCK_MARGIN * 2);
         g2.setColor(UNBREAKABLE_COLOR);
@@ -364,7 +461,14 @@ public class Renderer {
         g2.drawLine(x + size, y, x, y + size);
     }
 
-    // Same size as drawBlock, but only the outline
+    /**
+     * Draws a ghost block: same size as drawBlock, but only the outline.
+     *
+     * @param g2    the graphics to draw with
+     * @param color the color of the outline
+     * @param x     the left edge, in pixels
+     * @param y     the top edge, in pixels
+     */
     private void drawGhostBlock(Graphics2D g2, Color color, int x, int y) {
         g2.setColor(color);
         g2.setStroke(new BasicStroke(2f));

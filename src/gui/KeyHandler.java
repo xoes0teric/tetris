@@ -3,6 +3,13 @@ package gui;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
+/**
+ * Remembers which keys were pressed so the game loop can read them.
+ *
+ * <p>Pressing a key only sets a flag. The game loop (GamePanel) reads the flag
+ * on its next frame and sets it back. Pause is a toggle and stays on until
+ * P is pressed again.
+ */
 public class KeyHandler implements KeyListener {
     // TODO: All of these should be private
     public static boolean upPressed;
@@ -20,9 +27,19 @@ public class KeyHandler implements KeyListener {
     public static int holdSlotPressed = -1; // -1 when no hold key was pressed
     public static int numberPressed = 0; // 1 to 3, 0 when none was pressed
 
+    /**
+     * Not used.
+     *
+     * @param e the key event
+     */
     @Override
     public void keyTyped(KeyEvent e) {}
 
+    /**
+     * Sets the flag of the pressed key. P toggles pause.
+     *
+     * @param e the key event
+     */
     @Override
     public void keyPressed(KeyEvent e) {
         int code = e.getKeyCode();
@@ -81,10 +98,17 @@ public class KeyHandler implements KeyListener {
         }
     }
 
+    /**
+     * Not used.
+     *
+     * @param e the key event
+     */
     @Override
     public void keyReleased(KeyEvent e) {}
 
-    // Forgets every pressed key except pause, so keys don't carry over between screens
+    /**
+     * Forgets every pressed key except pause, so keys don't carry over between screens.
+     */
     public static void clearActions() {
         upPressed = false;
         downPressed = false;
