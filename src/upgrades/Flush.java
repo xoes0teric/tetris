@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
-    Flush removes the bottom 3 playable rows and the stack moves down 3 rows
-
-    It is an emergency button: it gives no points and isn't a line clear.
-    Unbreakable rows are below the playable rows, so flush never touches them.
-*/
+ * Flush removes the bottom 3 playable rows and the stack moves down 3 rows.
+ *
+ * <p>It is an emergency button: it gives no points and isn't a line clear.
+ * Unbreakable rows are below the playable rows, so flush never touches them.
+ */
 public class Flush {
     public static final int ROWS = 3;
 
@@ -18,15 +18,31 @@ public class Flush {
                 + " No points. Single use.",
     });
 
+    /**
+     * Returns the upgrade information for the selection screen.
+     *
+     * @return the upgrade
+     */
     public Upgrade getUpgrade() {
         return upgrade;
     }
 
+    /**
+     * Checks whether the player has a flush to use.
+     *
+     * @return true if the flush has a charge
+     */
     public boolean hasCharge() {
         return upgrade.getLevel() > 0;
     }
 
-    // Only usable when it would remove something, so the charge isn't wasted
+    /**
+     * Checks whether the flush can be used. It is only usable when it would
+     * remove something, so the charge isn't wasted.
+     *
+     * @param board the board to flush
+     * @return true if there is a charge and the bottom rows have blocks
+     */
     public boolean canUse(Board board) {
         if (!hasCharge()) {
             return false;
@@ -39,7 +55,12 @@ public class Flush {
         return false;
     }
 
-    // The rows flush removes, from the bottom up
+    /**
+     * Returns the rows the flush removes, from the bottom up.
+     *
+     * @param board the board to flush
+     * @return the bottom playable rows
+     */
     public List<Integer> bottomRows(Board board) {
         List<Integer> rows = new ArrayList<>();
         for (int i = 1; i <= ROWS && board.getPlayableRows() - i >= 0; ++i) {
@@ -48,7 +69,12 @@ public class Flush {
         return rows;
     }
 
-    // Removes the rows, spends the charge and returns how many blocks were removed
+    /**
+     * Removes the rows and spends the charge.
+     *
+     * @param board the board to flush
+     * @return the number of blocks that were removed
+     */
     public int use(Board board) {
         upgrade.spendCharge();
         return board.removeBottomRows(ROWS);
