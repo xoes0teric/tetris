@@ -305,6 +305,7 @@ public class PlayManager {
         if (boss == null && !upcomingBosses.isEmpty()
                 && getLines() >= upcomingBosses.peek().getTriggerLines()) {
             boss = upcomingBosses.poll();
+            boss.setLevel(getLevel());
             gameState = GameState.BOSS_INTRO;
             return;
         }

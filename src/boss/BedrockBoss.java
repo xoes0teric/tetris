@@ -16,7 +16,7 @@ public class BedrockBoss {
     public static final int TRIGGER_LINES = 30;
     public static final int RESPAWN_LINES = 30; // lines after a win before it returns
     public static final int UNBREAKABLE_ROWS = 4;
-    public static final int TARGET_SCORE = 300;
+    public static final int TARGET_SCORE = 2500; //score needed to beat boss
     public static final long TIME_LIMIT_NANOS = 120_000_000_000L; // 2 minutes
 
     private final int triggerLines;
@@ -26,6 +26,7 @@ public class BedrockBoss {
 
     private BossOutcome outcome = BossOutcome.WAITING;
     private long remainingNanos;
+    private int level = 1; // the game level when the boss appeared
     private int score = 0;
 
     /**
@@ -68,7 +69,7 @@ public class BedrockBoss {
      */
     public String getDescription() {
         return unbreakableRows + " rows of unbreakable stone rise from below."
-                + " Score " + targetScore + " points before time runs out!";
+                + " Score " + getTargetScore() + " points before time runs out!";
     }
 
     /**
@@ -153,7 +154,7 @@ public class BedrockBoss {
             return;
         }
         score += points;
-        if (score >= targetScore) {
+        if (score >= getTargetScore()) {
             outcome = BossOutcome.WON;
         }
     }
@@ -177,12 +178,23 @@ public class BedrockBoss {
     }
 
     /**
-     * Returns the points needed to beat the boss.
+     * Returns the points needed to beat the boss. It grows with the level the
+     * boss appeared at, because points per clear grow with the level too.
      *
      * @return the target score
      */
     public int getTargetScore() {
-        return targetScore;
+        return targetScore * level;
+    }
+
+    /**
+     * Sets the game level the boss appeared at, which scales the target score.
+     * Called when the boss is introduced, before the fight starts.
+     *
+     * @param level the current game level
+     */
+    public void setLevel(int level) {
+        this.level = level;
     }
 
     /**

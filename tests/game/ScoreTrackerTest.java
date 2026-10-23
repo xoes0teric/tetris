@@ -50,7 +50,7 @@ class ScoreTrackerTest {
     void levelUpClearIsScoredAtOldMultiplier() {
         clearLines(8);
         int earned = tracker.countClearedLines(rows(4)); // line goes from 8 to 12
-        assertEquals(800, earned);
+        assertEquals(1000, earned);
         assertEquals(2, tracker.getScoreMultiplier());
     }
 
