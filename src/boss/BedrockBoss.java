@@ -6,7 +6,8 @@ import game.Board;
  * Bedrock, the first boss.
  *
  * <p>It pushes unbreakable rows under the stack, so there is less room to play.
- * The player has to score TARGET_SCORE points before the time runs out.
+ * The player has to score TARGET_SCORE times the level the boss appeared at
+ * before the time runs out.
  * Winning removes the rows again, losing ends the run.
  *
  * <p>The game asks the boss what to do, the boss doesn't control the game.
@@ -16,7 +17,7 @@ public class BedrockBoss {
     public static final int TRIGGER_LINES = 30;
     public static final int RESPAWN_LINES = 30; // lines after a win before it returns
     public static final int UNBREAKABLE_ROWS = 4;
-    public static final int TARGET_SCORE = 2500; //score needed to beat boss
+    public static final int TARGET_SCORE = 2500; // score needed per level to beat the boss
     public static final long TIME_LIMIT_NANOS = 120_000_000_000L; // 2 minutes
 
     private final int triggerLines;

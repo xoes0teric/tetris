@@ -170,7 +170,6 @@ public class Tetromino {
      * <p>If it doesn't fit, tries shifting the piece left, right, then up (wall kick).
      * The 2 cell kicks are for the I piece, which can stick out 2 cells past a wall.
      * If no position fits, the piece doesn't rotate.
-     * THIS IS A SIMPLIFIED WALL KICK, REAL TETRIS USES KICK TABLES.
      */
     public void rotate() {
         int last = shape.getBoxSize() - 1;

@@ -11,7 +11,6 @@ import java.awt.event.KeyListener;
  * P is pressed again.
  */
 public class KeyHandler implements KeyListener {
-    // TODO: All of these should be private
     public static boolean upPressed;
     public static boolean downPressed;
     public static boolean leftPressed;

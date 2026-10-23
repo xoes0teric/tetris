@@ -7,7 +7,8 @@ A run starts as normal Tetris. Every 5 cleared lines the game pauses and lets yo
 one of up to three upgrades. Some upgrades stay for the rest of the run, others are single-
 use tools that can get you out of a bad position. After 30 cleared lines the first boss,
 **Bedrock**, appears and pushes unbreakable rows into the board. To survive, you have to use 
-the upgrades you collected and score enough points before the boss timer runs out.
+the upgrades you collected and score enough points before the boss timer runs out. Beat it
+and it comes back stronger 30 lines later.
 
 ---
 
@@ -17,6 +18,7 @@ the upgrades you collected and score enough points before the boss timer runs ou
 * Windows, macOS or Linux.
 * No external libraries. The game only uses the standard Java library (Swing and AWT),
 * so nothing else has to be installed or downloaded.
+* The tests use JUnit 5, which is included in the `lib` folder.
 
 To check if Java is installed, open a terminal (Command Prompt or PowerShell on Windows)
 and run:
@@ -63,6 +65,24 @@ If this says "permission denied", run `chmod +x run.sh` once and try again.
 **From an IDE:** open the project folder in IntelliJ IDEA, Eclipse or VS Code, mark `src` as
 the source folder and run the `main` method in `game.Main`.
 
+### Running the tests
+
+On macOS and Linux, `test.sh` compiles the game and the tests and runs them with JUnit:
+
+```
+./test.sh
+```
+
+On Windows, compile the test files (the game classes they use are compiled automatically)
+and run them:
+
+```
+javac -cp lib/junit-platform-console-standalone-1.11.4.jar -sourcepath src -d bin-test tests/game/ScoreTrackerTest.java tests/boss/BedrockBossTest.java
+java -jar lib/junit-platform-console-standalone-1.11.4.jar execute --class-path bin-test --scan-class-path
+```
+
+When you add a new test file, add it to the end of the `javac` command.
+
 ---
 
 ## Controls
@@ -105,8 +125,9 @@ shown next to the board.
 
 ### Scoring and levels
 
-Each cleared line is worth 10 × the current level. Every 10 cleared lines the level goes up
-and the pieces fall faster. Pieces are dealt from a shuffled "bag" of all seven shapes, so you
+Clearing 1, 2, 3 or 4 lines at once gives 100, 300, 500 or 1000 points, times the current
+level. Every 10 cleared lines the level goes up and the pieces fall faster. A clear that
+takes you to a new level is still scored at the old level. Pieces are dealt from a shuffled "bag" of all seven shapes, so you
 never wait too long for a specific piece. An outline on the board (the ghost piece) shows
 where the falling piece will land.
 
@@ -127,10 +148,13 @@ yet, is not offered again.
 
 At 30 cleared lines Bedrock appears and an intro screen explains the fight. When you press
 Enter, 4 rows of grey unbreakable stone rise from the bottom of the board and push your
-stack up. You have **2 minutes to score 300 points**. The boss timer keeps running in the
-upgrade menu and while aiming, so only pausing with P stops it.
+stack up. You have **2 minutes to score 2500 × your level in points** (10,000 points if it
+appears at level 4). The target is set when Bedrock appears, so it grows along with the
+points you get per clear. The boss timer keeps running in the upgrade menu and while
+aiming, so only pausing with P stops it.
 
-* **Win:** the bedrock crumbles away and the run continues.
+* **Win:** the bedrock crumbles away and the run continues. Bedrock returns 30 cleared
+lines later, with a target based on your level at that time.
 * **Lose:** the run is over.
 
 The run also ends when the stack reaches the top of the board. Press R to start again.
@@ -143,6 +167,11 @@ The run also ends when the stack reaches the top of the board. Press R to start 
 tetris/
 ├── README.md
 ├── run.sh                 Compiles and starts the game (macOS / Linux)
+├── test.sh                Compiles and runs the tests (macOS / Linux)
+├── lib/                   The JUnit jar, only used by the tests
+├── tests/                 JUnit tests, in the same packages as the classes they test
+│   ├── game/              ScoreTrackerTest
+│   └── boss/              BedrockBossTest
 └── src/
     ├── game/              Rules of the game, no drawing
     │   ├── Main.java          Opens the window and starts the game
