@@ -14,6 +14,7 @@ import game.Board;
  */
 public class BedrockBoss {
     public static final int TRIGGER_LINES = 30;
+    public static final int RESPAWN_LINES = 30; // lines after a win before it returns
     public static final int UNBREAKABLE_ROWS = 4;
     public static final int TARGET_SCORE = 300;
     public static final long TIME_LIMIT_NANOS = 120_000_000_000L; // 2 minutes
@@ -77,6 +78,18 @@ public class BedrockBoss {
      */
     public int getTriggerLines() {
         return triggerLines;
+    }
+
+    /**
+     * Creates a fresh copy of this boss that appears RESPAWN_LINES lines after
+     * the given line count, used to bring the boss back after it is beaten.
+     *
+     * @param currentLines the lines cleared when this boss was beaten
+     * @return a new boss with the same values and a later trigger
+     */
+    public BedrockBoss respawn(int currentLines) {
+        return new BedrockBoss(currentLines + RESPAWN_LINES, unbreakableRows, targetScore,
+                timeLimitNanos);
     }
 
     /**

@@ -515,13 +515,14 @@ public class PlayManager {
     }
 
     /**
-     * Ends the boss fight. If the boss was beaten its rows are removed.
-     * The result screen is shown next.
+     * Ends the boss fight. If the boss was beaten its rows are removed and it
+     * comes back after another RESPAWN_LINES lines. The result screen is shown next.
      */
     private void finishBoss() {
         if (boss.getOutcome() == BossOutcome.WON) {
             boss.end(board);
             currentPiece.moveUpUntilFits();
+            upcomingBosses.add(boss.respawn(getLines()));
         }
         bossResultPending = true;
     }
