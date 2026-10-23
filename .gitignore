@@ -69,6 +69,7 @@ out/
 .classpath
 .settings/
 bin/
+bin-test/
 .metadata/
 
 # NetBeans
